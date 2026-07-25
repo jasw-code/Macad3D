@@ -198,8 +198,13 @@ public sealed class WorkspaceController : BaseObject, IContextMenuItemProvider, 
 
         _CurrentTool = null;
         _CurrentEditor = null;
-        _Grid = null;
-            
+        if (_Grid != null)
+        {
+            AisContext?.Remove(_Grid, false);
+            _Grid.Dispose();
+            _Grid = null;
+        }
+
         _RedrawTimer.Stop();
         _RedrawTimer.Tick -= _RedrawTimer_Tick;
 
@@ -293,7 +298,7 @@ public sealed class WorkspaceController : BaseObject, IContextMenuItemProvider, 
         // Remove obsolete
         foreach (var viewCtrl in oldList)
         {
-            viewCtrl.PropertyChanged += _ViewController_PropertyChanged;
+            viewCtrl.PropertyChanged -= _ViewController_PropertyChanged;
             viewCtrl.Dispose();
         }
         oldList.Clear();

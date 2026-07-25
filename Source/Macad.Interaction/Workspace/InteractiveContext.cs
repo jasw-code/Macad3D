@@ -56,6 +56,7 @@ public abstract class InteractiveContext : CoreContext
 
             field?.Dispose();
             field = value;
+            RaisePropertyChanged(nameof(WorkspaceController));
             RaisePropertyChanged(nameof(ViewportController));
         }
     }
@@ -128,7 +129,6 @@ public abstract class InteractiveContext : CoreContext
     {
         DocumentController?.Dispose();
         DocumentController = null;
-        WorkspaceController?.Dispose();
         WorkspaceController = null;
         _EditorState?.Dispose();
         base.Dispose(disposing);

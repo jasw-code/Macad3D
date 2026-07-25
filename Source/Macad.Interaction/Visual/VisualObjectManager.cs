@@ -80,7 +80,13 @@ public sealed class VisualObjectManager : BaseObject, IDisposable
         Layer.InteractivityChanged -= _Layer_InteractivityChanged;
         InteractiveEntity.VisualChanged -= _InteractiveEntity_VisualChanged;
         Entity.EntityRemoved -= _Entity_EntityRemoved;
-            
+
+        // Explicitly remove/dispose all visual objects
+        foreach (var visualObject in _InteractiveToVisualDictionary.Values)
+        {
+            visualObject.Remove();
+        }
+
         _InteractiveToVisualDictionary.Clear();
         _GuidToInteractiveDictionary.Clear();
         _InvalidatedInteractiveEntities.Clear();

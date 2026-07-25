@@ -24,6 +24,8 @@ public sealed class Context : InteractiveContext
     internal ViewportRenderWindow RenderWindow { get; private set; }
     public IViewportMouseControl MouseControl { get; set; } = new ViewportMouseControlDefault();
     public IViewportTouchControl TouchControl { get; set; } = new ViewportTouchControlDefault();
+    
+    int _ViewportSize = 0;
 
     //--------------------------------------------------------------------------------------------------
 
@@ -87,6 +89,7 @@ public sealed class Context : InteractiveContext
     {
         InitWithDefault();
 
+        Current._ViewportSize = viewportSize;
         Current.RenderWindow = new (Current.WorkspaceController, Color.Black, 1.0);
         Current.RenderWindow.Init(IntPtr.Zero, new Int32Rect(0, 0, viewportSize, viewportSize));
 
@@ -136,10 +139,13 @@ public sealed class Context : InteractiveContext
         {
             if (RenderWindow != null)
             {
-                var size = RenderWindow.Size();
                 RenderWindow.Dispose();
-                RenderWindow = new(Current.WorkspaceController, Color.Black, 1.0);
-                RenderWindow.Init(IntPtr.Zero, new Int32Rect(0, 0, size.Width, size.Height));
+            }
+
+            if (WorkspaceController != null && _ViewportSize != 0)
+            {
+                RenderWindow = new(WorkspaceController, Color.Black, 1.0);
+                RenderWindow.Init(IntPtr.Zero, new Int32Rect(0, 0, _ViewportSize, _ViewportSize));
             }
         }
     }

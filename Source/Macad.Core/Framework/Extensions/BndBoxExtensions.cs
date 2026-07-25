@@ -1,4 +1,5 @@
 ﻿using System;
+using Macad.Common;
 using Macad.Occt;
 
 namespace Macad.Core;
@@ -37,6 +38,15 @@ public static class BndBoxExtensions
 
     //--------------------------------------------------------------------------------------------------
 
+    public static string ToRoundedString(this Bnd_Box box)
+    {
+        double xMin = 0, yMin = 0, zMin = 0, xMax = 0, yMax = 0, zMax = 0;
+        box.Get(ref xMin, ref yMin, ref zMin, ref xMax, ref yMax, ref zMax);
+        return $"[{xMin.ToRoundedString()}, {yMin.ToRoundedString()}, {zMin.ToRoundedString()}] - [{xMax.ToRoundedString()}, {yMax.ToRoundedString()}, {zMax.ToRoundedString()}]";
+    }
+
+    //--------------------------------------------------------------------------------------------------
+
     public static Pnt2d Center(this Bnd_Box2d box)
     {
         double xMin = 0, yMin = 0, xMax = 0, yMax = 0;
@@ -65,7 +75,4 @@ public static class BndBoxExtensions
 
         return (xMin, yMin, xMax, yMax);
     }
-
-    //--------------------------------------------------------------------------------------------------
-
 }

@@ -1,13 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using Macad.Test.Utils;
+﻿using Macad.Common.Serialization;
 using Macad.Core;
 using Macad.Core.Shapes;
 using Macad.Core.Topology;
 using Macad.Occt;
+using Macad.Test.Utils;
 using NUnit.Framework;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 
 namespace Macad.Test.Core.Modeling.Subshapes;
 
@@ -131,7 +132,7 @@ public class SubshapeReferenceTests
         // Create shapes
         var box = MakeBox();
         var cyl = MakeCylinder();
-        var cut = MakeBooleanCut(box, cyl);
+        var cut = MakeBooleanFuse(box, cyl);
 
         // Sanity check
         Assert.AreEqual(4, box.Faces.Count(e => cut.Faces.Any(faceBool => faceBool.IsPartner(e))));
@@ -149,8 +150,7 @@ public class SubshapeReferenceTests
         // Find reference, modified face
         var ref3 = cut.Shape.GetSubshapeReference(cut.Faces[2]);
         Assert.IsNotNull(ref3);
-        Assert.AreNotEqual(cut.Shape.Guid, ref3.ShapeId);
-        Assert.AreEqual(box.Shape.Guid, ref3.ShapeId);
+        Assert.AreEqual(cut.Shape.Guid, ref3.ShapeId);
 
         //// Recalc
         InvalidateShape(ref box);
@@ -385,6 +385,130 @@ public class SubshapeReferenceTests
     }
 
     //--------------------------------------------------------------------------------------------------
+    
+    [Test]
+    public void SubshapeReferenceSerialize()
+    {
+        var originalValue = new SubshapeReference(SubshapeType.Edge, new Guid("{fb82b37c-cc56-415e-baea-773f4bbe7203}"), 42);
+        var w = new Writer();
+        var serializer = Serializer.GetSerializer(typeof(SubshapeReference));
+        Assert.NotNull(serializer);
+        serializer.Write(w, originalValue, null);
+        Assert.True(w.IsValid());
+        Assert.AreEqual("E-fb82b37ccc56415ebaea773f4bbe7203-42", w.ToString());
+
+        var r = new Reader(w.ToString());
+        var targetValue = serializer.Read(r, null, null) as SubshapeReference;
+        Assert.False(r.AnyLeft);
+        Assert.AreEqual(originalValue, targetValue);
+    }
+
+    //--------------------------------------------------------------------------------------------------
+
+    [Test]
+    public void NamedSubshapeReferenceSerialize()
+    {
+        var originalValue = new SubshapeReference(SubshapeType.Edge, new Guid("{fb82b37c-cc56-415e-baea-773f4bbe7203}"), "MyPart", 42);
+        var w = new Writer();
+        var serializer = Serializer.GetSerializer(typeof(SubshapeReference));
+        Assert.NotNull(serializer);
+        serializer.Write(w, originalValue, null);
+        Assert.True(w.IsValid());
+        Assert.AreEqual("E-fb82b37ccc56415ebaea773f4bbe7203-MyPart-42", w.ToString());
+
+        var r = new Reader(w.ToString());
+        var targetValue = serializer.Read(r, null, null) as SubshapeReference;
+        Assert.False(r.AnyLeft);
+        Assert.AreEqual(originalValue, targetValue);
+    }
+
+    //--------------------------------------------------------------------------------------------------
+
+    [Test]
+    public void CompositeSubshapeReferenceSerialize()
+    {
+        var source1 = new SubshapeReference(SubshapeType.Face, TestData.CreateGuid(1), "seg", 3);
+        var source2 = new SubshapeReference(SubshapeType.Face, TestData.CreateGuid(2), 7);
+        var originalValue = new SubshapeReference(SubshapeType.Edge, TestData.CreateGuid(3), "Copy", 0, [source1, source2]);
+        var w = new Writer();
+        var serializer = Serializer.GetSerializer(typeof(SubshapeReference));
+        Assert.NotNull(serializer);
+        serializer.Write(w, originalValue, null);
+        Assert.True(w.IsValid());
+        Assert.AreEqual("E-00000000000000000000000000000003-Copy-0(F-00000000000000000000000000000001-seg-3|F-00000000000000000000000000000002-7)", w.ToString());
+
+        var r = new Reader(w.ToString());
+        var targetValue = serializer.Read(r, null, null) as SubshapeReference;
+        Assert.False(r.AnyLeft);
+        Assert.AreEqual(originalValue, targetValue);
+    }
+
+    //--------------------------------------------------------------------------------------------------
+
+    [Test]
+    public void NestedCompositeSubshapeReferenceSerialize()
+    {
+        var inner = new SubshapeReference(SubshapeType.Face, TestData.CreateGuid(1), "seg", 3);
+        var middle = new SubshapeReference(SubshapeType.Face, TestData.CreateGuid(2), "Copy", 0, [inner]);
+        var originalValue = new SubshapeReference(SubshapeType.Face, TestData.CreateGuid(3), "Copy", 1, [middle]);
+        var w = new Writer();
+        var serializer = Serializer.GetSerializer(typeof(SubshapeReference));
+        Assert.NotNull(serializer);
+        serializer.Write(w, originalValue, null);
+        Assert.True(w.IsValid());
+
+        var r = new Reader(w.ToString());
+        var targetValue = serializer.Read(r, null, null) as SubshapeReference;
+        Assert.False(r.AnyLeft);
+        Assert.AreEqual(originalValue, targetValue);
+    }
+
+    //--------------------------------------------------------------------------------------------------
+
+    [Test]
+    public void NameIsInternedAfterDeserialization()
+    {
+        var originalValue = new SubshapeReference(SubshapeType.Edge, TestData.CreateGuid(1), "Test", 42);
+        Assume.That(string.IsInterned(originalValue.Name), Is.Not.Null);
+        var serialized = Serializer.Serialize(originalValue, null);
+        var targetValue = Serializer.Deserialize<SubshapeReference>(serialized, null);
+        Assert.AreEqual(originalValue, targetValue);
+        Assert.That(string.IsInterned(targetValue.Name), Is.Not.Null);
+    }
+
+    //--------------------------------------------------------------------------------------------------
+
+    [Test]
+    [Description("This test will check if a name is interned although it wasn't at serilaization time. " +
+                 "Some names are interned at construction of first subname list, so not already interned at load time.")]
+    public void UnknownNameIsInternedAfterDeserialization()
+    {
+        var i = 42;
+        var originalValue = new SubshapeReference(SubshapeType.Edge, TestData.CreateGuid(1), $"Test{i}", 42);
+        Assume.That(string.IsInterned(originalValue.Name), Is.Null);
+        var serialized = Serializer.Serialize(originalValue, null);
+        var targetValue = Serializer.Deserialize<SubshapeReference>(serialized, null);
+        Assert.AreEqual(originalValue, targetValue);
+        Assert.That(string.IsInterned(targetValue.Name), Is.Not.Null);
+    }
+
+    //--------------------------------------------------------------------------------------------------
+
+    [Test]
+    [Description("A simple edge reference on a box must target the same edge after save/reload")]
+    public void ReferencesSurviveSaveAndReload()
+    {
+        Context.InitWithDefault();
+        var box = TestGeomGenerator.CreateBox();
+        box.Guid = TestData.CreateGuid(1);
+        CoreContext.Current.Document.Add(box.Body);
+        Assert.IsTrue(box.Make(Shape.MakeFlags.None));
+
+        var edgeRef = box.GetSubshapeReference(box.GetBRep().Edges()[0]);
+        AssertHelper.CheckReferenceSurvivesReload(box.Body, [edgeRef]);
+    }
+
+    //--------------------------------------------------------------------------------------------------
 
     #region Utils
 
@@ -409,6 +533,7 @@ public class SubshapeReferenceTests
                 DimensionX = 10,
                 DimensionY = 10,
                 DimensionZ = 10,
+                Guid = TestData.CreateGuid(1)
             }
         };
         desc.Body = TestGeomGenerator.CreateBody(desc.Shape);
@@ -433,6 +558,7 @@ public class SubshapeReferenceTests
             {
                 Height = 10,
                 Radius = 2,
+                Guid = TestData.CreateGuid(2)
             }
         };
         desc.Body = TestGeomGenerator.CreateBody(desc.Shape, new Pnt(5, 5, 0)); 
@@ -455,6 +581,7 @@ public class SubshapeReferenceTests
         {
             Shape = BooleanCut.Create(op1.Body, new BodyShapeOperand(op2.Body))
         };
+        desc.Shape.Guid = TestData.CreateGuid(10);
         desc.OcShape = desc.Shape.GetBRep();
         desc.Vertices = desc.OcShape.Vertices();
         Assert.AreEqual(10, desc.Vertices.Count);
@@ -462,6 +589,26 @@ public class SubshapeReferenceTests
         Assert.AreEqual(15, desc.Edges.Count);
         desc.Faces = desc.OcShape.Faces();
         Assert.AreEqual(7, desc.Faces.Count);
+
+        return desc;
+    }
+
+    //--------------------------------------------------------------------------------------------------
+
+    ShapeDesc MakeBooleanFuse(ShapeDesc op1, ShapeDesc op2)
+    {
+        var desc = new ShapeDesc
+        {
+            Shape = BooleanFuse.Create(op1.Body, new BodyShapeOperand(op2.Body))
+        };
+        desc.Shape.Guid = TestData.CreateGuid(10);
+        desc.OcShape = desc.Shape.GetBRep();
+        desc.Vertices = desc.OcShape.Vertices();
+        Assert.AreEqual(8, desc.Vertices.Count);
+        desc.Edges = desc.OcShape.Edges();
+        Assert.AreEqual(12, desc.Edges.Count);
+        desc.Faces = desc.OcShape.Faces();
+        Assert.AreEqual(6, desc.Faces.Count);
 
         return desc;
     }

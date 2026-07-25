@@ -134,7 +134,22 @@ public class SphereTests
         shape.MinLatitude = minLatitude;
         shape.MaxLatitude = maxLatitude;
         shape.Guid = TestData.CreateGuid(1);
+        AssertHelper.HasValidSubshapeReferences(shape);
         AssertHelper.IsSameSubshapeReferences(shape, Path.Combine(_BasePath, $"SubshapeReferences_{(int)segmentAngle}_{(int)minLatitude}_{(int)maxLatitude}"));
+    }
+
+    //--------------------------------------------------------------------------------------------------
+
+    [Test]
+    [Description("A primitive's face references must survive a change of its own dimensions")]
+    public void SubshapeReferencesSurvivesRadiusChange()
+    {
+        var shape = new Sphere()
+        {
+            Radius = 10
+        };
+
+        AssertHelper.AreSubshapeReferencesStableAfterChange(shape, () => shape.Radius = 11);
     }
 
     //--------------------------------------------------------------------------------------------------

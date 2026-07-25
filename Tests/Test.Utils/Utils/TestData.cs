@@ -199,10 +199,10 @@ public static class TestData
 
     //--------------------------------------------------------------------------------------------------
 
-    public static Guid CreateGuid(byte no)
+    public static Guid CreateGuid(int no)
     {
         Span<byte> bytes = stackalloc byte[16];
-        bytes[15] = no;
+        bytes[15] = (byte)no;
         return new Guid(bytes);
     }
 

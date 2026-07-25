@@ -1,17 +1,18 @@
-﻿using System;
+﻿using Macad.Common;
+using Macad.Common.Serialization;
+using Macad.Core;
+using Macad.Core.Shapes;
+using Macad.Occt;
+using Macad.Occt.Helper;
+using NUnit.Framework;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-using Macad.Common;
-using Macad.Common.Serialization;
-using Macad.Core;
-using Macad.Core.Shapes;
-using Macad.Occt;
-using NUnit.Framework;
-using Macad.Occt.Helper;
+using Macad.Core.Topology;
 
 namespace Macad.Test.Utils;
 
@@ -461,66 +462,34 @@ public static class AssertHelper
 
     //--------------------------------------------------------------------------------------------------
 
+    public static void HasValidSubshapeReferences(Shape shape, bool allowSelfReferencing=false, bool allowNonInterned=false, int allowedIndexBased=0)
+    {
+        bool isValid = SubshapeReferenceCompare.CheckReferences(shape, allowSelfReferencing, allowNonInterned, out int indexBasedReferences);
+        Assert.That(isValid, Is.True, "Subshape contains invalid references.");
+        Assert.That(indexBasedReferences, Is.LessThanOrEqualTo(allowedIndexBased), "Subshape contains potential unstable references.");
+    }
+
+    //--------------------------------------------------------------------------------------------------
+
     public static void IsSameSubshapeReferences(Shape shape, string referenceFile)
     {
-        string resultFile = referenceFile + "_TestResult.txt";
-        TestData.DeleteTestResult(resultFile);
+        Assert.That(SubshapeReferenceCompare.CompareReferences(shape, referenceFile), "Subshape references do not match.");
+    }
 
-        bool failed = false;
+    //--------------------------------------------------------------------------------------------------
 
-        Dictionary<string,Pnt> subshapes = [];
-        foreach (var face in shape.GetBRep().Faces())
-        {
-            var currentSubshape = shape.GetSubshapeReference(face);
-            subshapes.Add(currentSubshape.ToString(), face.CenterOfMass());
-        }
-        foreach (var edge in shape.GetBRep().Edges())
-        {
-            var currentSubshape = shape.GetSubshapeReference(edge);
-            BRepLib.BuildCurve3d(edge);
-            subshapes.Add(currentSubshape.ToString(), edge.CenterOfMass());
-        }
+    public static void AreSubshapeReferencesStableAfterChange(Shape shape, Action applyChange)
+    {
+        bool stable = SubshapeReferenceStabilityCheck.CheckReferencesAfterChange(shape, applyChange, out string summary);
+        TestContext.WriteLine(summary);
+        Assert.That(stable, Is.True, "Subshape references did not survive the distance change.");
+    }
 
-        var expectedList = TestData.GetTestDataSerialized<Dictionary<string, Pnt>>(referenceFile + ".txt");
-        if(expectedList == null)
-        {
-            TestData.WriteTestResultSerialized(subshapes, referenceFile + "_TestResult.txt");
-            Assert.Fail("Reference file not found: " + referenceFile);
-        }
+    //--------------------------------------------------------------------------------------------------
 
-        foreach (var (reference, com) in subshapes)
-        {
-            if (!expectedList.TryGetValue(reference, out var expectedCom))
-            {
-                failed = true;
-                TestContext.WriteLine($"Unexpected subshape reference found: {reference} / {com}");
-                continue;
-            }
-
-            if (!expectedCom.IsEqual(com, 1e-6))
-            {
-                failed = true;
-                TestContext.WriteLine($"Center of mass does not match for reference: {reference}. CoM: {com}. Expected: {expectedCom}");
-                continue;
-            }
-
-            expectedList.Remove(reference);
-        }
-
-        if (expectedList.Count > 0)
-        {
-            failed = true;
-            foreach (var (reference, com) in expectedList)
-            {
-                TestContext.WriteLine($"Missing subshape reference: {reference}. CoM: {com}");
-            }
-        }
-
-        if (failed)
-        {
-            TestData.WriteTestResultSerialized(subshapes, resultFile);
-            Assert.Fail("Subshape references do not match.");
-        }
+    public static void CheckReferenceSurvivesReload(Body target, SubshapeReference[] refs)
+    {
+        Assert.That(SubshapeReferenceStabilityCheck.CheckReferenceSurvivesReload(target, refs));
     }
 
     //--------------------------------------------------------------------------------------------------

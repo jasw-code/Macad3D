@@ -307,7 +307,7 @@ public class OffsetSegmentSketchTool : SketchTool
                     .Select(seg => seg.MakeCurve(Sketch.Points))
                     .Select(curve => curve != null ? new BRepBuilderAPI_MakeEdge(curve, surface).Edge() : null)
                     .ToArray();
-            var wires = Topo2dUtils.BuildWiresFromEdges(_Edges.WhereNotNull()).Wires();
+            var wires = Topo2dUtils.BuildWiresFromEdges(_Edges.WhereNotNull(), false).Wires();
             wires.ForEach(makeFace.Add);
 
             // Fix orientation of that faces

@@ -1,12 +1,13 @@
-﻿using System;
+﻿using Macad.Common;
+using Macad.Common.Serialization;
+using Macad.Core.Topology;
+using Macad.Occt;
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using Macad.Core.Topology;
-using Macad.Common.Serialization;
-using Macad.Occt;
-using Macad.Common;
 
 namespace Macad.Core.Shapes;
 
@@ -161,7 +162,7 @@ public abstract class Shape : Entity, IShapeOperand, IShapeDependent
     string _Name;
     TopoDS_Shape _BRep;
     TopoDS_Shape _TransformedBRep;
-    readonly List<NamedSubshape> _NamedSubshapes = new();
+    protected readonly List<NamedSubshape> NamedSubshapes = new();
 
     #endregion
 
@@ -556,35 +557,52 @@ public abstract class Shape : Entity, IShapeOperand, IShapeDependent
 
     #region Subshapes
 
-    struct NamedSubshape
+    [DebuggerDisplay("{Type,nq} {Name,nq} {Index,nq} {Sources?.Length}")]
+    protected class NamedSubshape
     {
         internal SubshapeType Type;
         internal string Name;
         internal int Index;
         internal TopoDS_Shape Shape;
+        internal TopoDS_Shape[] Sources;
+
+        public bool IsSameName(NamedSubshape other)
+        {
+            if(Type != other.Type || Name != other.Name || Index != other.Index)
+                return false;
+
+            if(Sources == null)
+                return other.Sources == null;
+
+            if (Sources.Length != other.Sources.Length)
+                return false;
+
+            return Sources.ContainsAllSame(other.Sources);
+        }
     }
 
     //--------------------------------------------------------------------------------------------------
 
-    protected void AddNamedSubshape(string name, TopoDS_Shape shape, int index)
+    protected void AddNamedSubshape(string name, TopoDS_Shape shape, int index, TopoDS_Shape[] sources = null)
     {
         var newItem = new NamedSubshape()
         {
             Type = SubshapeTypeHelper.GetType(shape),
             Name = name,
             Index = index,
-            Shape = shape
+            Shape = shape,
+            Sources = sources
         };
 
         // Update shape if type/name/index already exists
-        var sameIndex = _NamedSubshapes.FindIndex(ns => ns.Name == newItem.Name && ns.Index == newItem.Index && ns.Type == newItem.Type);
+        var sameIndex = NamedSubshapes.FindIndex(ns => ns.IsSameName(newItem));
         if (sameIndex >= 0)
         {
-            _NamedSubshapes[sameIndex] = newItem;
+            NamedSubshapes[sameIndex] = newItem;
         }
         else
         {
-            _NamedSubshapes.Add(newItem);
+            NamedSubshapes.Add(newItem);
         }
     }
 
@@ -625,7 +643,7 @@ public abstract class Shape : Entity, IShapeOperand, IShapeDependent
 
     protected virtual void ClearSubshapeLists()
     {
-        _NamedSubshapes.Clear();
+        NamedSubshapes.Clear();
     }
 
     //--------------------------------------------------------------------------------------------------
@@ -707,10 +725,13 @@ public abstract class Shape : Entity, IShapeOperand, IShapeDependent
         var type = SubshapeTypeHelper.GetType(ocSubshape);
 
         // Is this a named subshape?
-        var namedSubshapeIndex = _NamedSubshapes.FindIndex(ns => ns.Shape.IsSame(ocSubshape));
+        var namedSubshapeIndex = NamedSubshapes.FindIndex(ns => ns.Shape.IsSame(ocSubshape));
         if (namedSubshapeIndex >= 0)
-        {
-            return new SubshapeReference(type, Guid, _NamedSubshapes[namedSubshapeIndex].Name, _NamedSubshapes[namedSubshapeIndex].Index);
+        { 
+            if (NamedSubshapes[namedSubshapeIndex].Sources == null)
+            {
+                return new(type, Guid, NamedSubshapes[namedSubshapeIndex].Name, NamedSubshapes[namedSubshapeIndex].Index);
+            }
         }
 
         // Search in shape
@@ -774,10 +795,16 @@ public abstract class Shape : Entity, IShapeOperand, IShapeDependent
         // Named subshape?
         if (!reference.Name.IsNullOrEmpty())
         {
-            var namedSubshapeIndex = _NamedSubshapes.FindIndex(ns => ns.Type == reference.Type && ns.Name == reference.Name && ns.Index == reference.Index);
-            if (namedSubshapeIndex >= 0)
+            if (reference.Sources == null)
             {
-                return new List<TopoDS_Shape>(1) {_NamedSubshapes[namedSubshapeIndex].Shape};
+                var namedSubshapeIndex = NamedSubshapes.FindIndex(ns => ns.Type == reference.Type 
+                                                                         && ns.Name == reference.Name 
+                                                                         && ns.Index == reference.Index 
+                                                                         && ns.Sources == null);
+                if (namedSubshapeIndex >= 0)
+                {
+                    return [NamedSubshapes[namedSubshapeIndex].Shape];
+                }
             }
             return null;
         }
@@ -793,20 +820,24 @@ public abstract class Shape : Entity, IShapeOperand, IShapeDependent
                 var edges = BRep.Edges(); // Get oriented one
                 if (reference.Index < edges.Count)
                 {
-                    return new List<TopoDS_Shape>(1) {edges[reference.Index]};
+                    return [edges[reference.Index]];
                 }
                 break;
 
             case SubshapeType.Face:
                 var faces = BRep.Faces();
                 if (reference.Index < faces.Count)
-                    return new List<TopoDS_Shape>(1) {faces[reference.Index]};
+                {
+                    return [faces[reference.Index]];
+                }
                 break;
 
             case SubshapeType.Vertex:
                 var vertices = BRep.Vertices();
                 if (reference.Index < vertices.Count)
-                    return new List<TopoDS_Shape>(1) {vertices[reference.Index]};
+                {
+                    return [vertices[reference.Index]];
+                }
                 break;
         }
 

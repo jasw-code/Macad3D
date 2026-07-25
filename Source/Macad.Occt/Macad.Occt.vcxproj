@@ -92,6 +92,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Extensions\BRepTools_Ex.cpp" />
     <ClCompile Include="Extensions\Geom2dAPI_Ex.cpp" />
     <ClCompile Include="Extensions\TopoDS_Ex.cpp" />
     <ClCompile Include="Generated\BRepClass3d.cpp" />
@@ -121,6 +122,7 @@
     <ClCompile Include="ValueTypes\3d\Vec.cpp" />
     <ClCompile Include="ValueTypes\3d\XYZ.cpp" />
     <ClInclude Include="BaseClass.h" />
+    <ClInclude Include="Extensions\BRepTools_Ex.h" />
     <ClInclude Include="Extensions\TopoDS_Ex.h" />
     <ClInclude Include="Generated\BRepFill.h" />
     <ClInclude Include="Generated\BRepPrim.h" />

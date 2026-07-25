@@ -268,8 +268,8 @@ public sealed class CircularArray : ModifierBase
         List<Trsf2d> transforms = new List<Trsf2d>((int)_Quantity);
         for (var index = 0; index < _Quantity; index++)
         {
+            var transform = new Trsf2d();
             var angle = (interval * index + offset).ToRad();
-            var transform = Trsf2d.Identity;
             if (_KeepOrientation)
             {
                 // Translation transform
@@ -284,9 +284,18 @@ public sealed class CircularArray : ModifierBase
         }
 
         // Do it!
-        var resultShape = Topo2dUtils.TransformSketchShape(sourceBRep, transforms, false);
+        List<BRepTools_History> histories = new(transforms.Count);
+        var resultShape = Topo2dUtils.TransformSketchShape(sourceBRep, transforms, histories: histories);
         if (resultShape == null)
             return false;
+
+        // Bookkeeping
+        for (var index = 0; index < histories.Count; index++)
+        {
+            var history = histories[index];
+            SubshapeReferenceUtils.CreateSubshapeNames("Copy", [sourceBRep], [new(index, history)], AddNamedSubshape);
+            UpdateModifiedSubshapes(sourceBRep, history);
+        }
 
         // Finalize
         BRep = resultShape;
@@ -331,7 +340,13 @@ public sealed class CircularArray : ModifierBase
                 Messages.Error("Failed transforming shape.");
                 return false;
             }
-            builder.Add(resultShape, makeTransform.Shape());
+
+            var transformedShape = makeTransform.Shape();
+            builder.Add(resultShape, transformedShape);
+
+            BRepTools_History history = new(sourceBRep, makeTransform);
+            SubshapeReferenceUtils.CreateSubshapeNames("Copy", [sourceBRep], [new(index, history)], AddNamedSubshape);
+            UpdateModifiedSubshapes(sourceBRep, history);
         }
 
         // Finalize

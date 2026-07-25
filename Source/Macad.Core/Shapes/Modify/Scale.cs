@@ -1,9 +1,11 @@
-﻿using System;
-using System.Diagnostics;
-using Macad.Common.Serialization;
+﻿using Macad.Common.Serialization;
 using Macad.Core.Geom;
 using Macad.Core.Topology;
 using Macad.Occt;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 
 namespace Macad.Core.Shapes;
 
@@ -211,12 +213,15 @@ public class Scale : ModifierBase
             transform.SetScaleFactor(scaleFactor.Y);
         }
 
-        var result = Topo2dUtils.TransformSketchShape(brep, new[] { transform }, false, affinityUFactor);
+        List<BRepTools_History> histories = new();
+        var result = Topo2dUtils.TransformSketchShape(brep, [transform], affinityUFactor: affinityUFactor, histories: histories);
         if (result == null)
         {
             Messages.Error("The modifier failed to scale the input shape. Please check input and try to vary it.");
             return false;
         }
+
+        UpdateModifiedSubshapes(brep, histories[0]);
 
         BRep = result;
 

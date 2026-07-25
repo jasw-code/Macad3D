@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
+using Macad.Common;
 using Macad.Core.Geom;
 using Macad.Core.Topology;
 using Macad.Common.Serialization;
@@ -359,12 +360,12 @@ public abstract class ModifierBase : Shape
     #region Subshapes
 
     readonly Dictionary<TopoDS_Shape, List<TopoDS_Shape>> _ModifiedShapes = new();
-
+    
     //--------------------------------------------------------------------------------------------------
 
     protected void AddModifiedSubshape(TopoDS_Shape original, List<TopoDS_Shape> shapes)
     {
-        if ((shapes == null) || (shapes.Count == 0))
+        if (shapes == null || shapes.Count == 0)
             return;
 
         // Was the original already modified?
@@ -372,7 +373,7 @@ public abstract class ModifierBase : Shape
         if (kvpModif.Key != null)
         {
             kvpModif.Value.RemoveAt(kvpModif.Value.IndexOfSame(original));
-            kvpModif.Value.AddRange(shapes);
+            kvpModif.Value.AddRange(shapes.Where(s => !kvpModif.Value.ContainsSame(s)));
             return;
         }
 
@@ -380,7 +381,7 @@ public abstract class ModifierBase : Shape
         var realKey = _ModifiedShapes.Keys.FirstOrDefault(s => s.IsSame(original));
         if (realKey != null)
         {
-            _ModifiedShapes[realKey].AddRange(shapes);
+            _ModifiedShapes[realKey].AddRange(shapes.Where(s => !_ModifiedShapes[realKey].ContainsSame(s)));
         }
         else
         {
@@ -398,14 +399,6 @@ public abstract class ModifierBase : Shape
             return kvpModif.Value;
         }
         return null;
-    }
-
-    //--------------------------------------------------------------------------------------------------
-        
-    protected TopoDS_Shape FindOriginalSubshape(TopoDS_Shape modifiedOrCreated)
-    {
-        var kvpModif = _ModifiedShapes.FirstOrDefault(kvp => kvp.Value.Any(s => s.IsSame(modifiedOrCreated)));
-        return kvpModif.Key;
     }
 
     //--------------------------------------------------------------------------------------------------
@@ -557,10 +550,36 @@ public abstract class ModifierBase : Shape
 
     public override SubshapeReference GetSubshapeReference(TopoDS_Shape ocSubshape)
     {
+        var original = ocSubshape;
+        var type = SubshapeTypeHelper.GetType(ocSubshape);
+
+        // Try to find named subshape
+        var namedSubshapeIndex = NamedSubshapes.FindIndex(ns => ns.Shape.IsSame(ocSubshape));
+        if (namedSubshapeIndex >= 0)
+        {
+            NamedSubshape namedSubshape = NamedSubshapes[namedSubshapeIndex];
+            if (namedSubshape.Sources != null)
+            {
+                SubshapeReference[] sources = namedSubshape.Sources.Select(shape => !shape.IsSame(ocSubshape) ? GetSubshapeReference(shape) : null)
+                                                                   .WhereNotNull()
+                                                                   .ToArray();
+                if (sources.Length == namedSubshape.Sources.Length)
+                {
+                    return new(type, Guid, namedSubshape.Name, namedSubshape.Index, sources);
+                }
+            }
+        }
+
+        // Get from base and take it if it is a named subshape
+        var baseRef = base.GetSubshapeReference(original);
+        if (baseRef != null && !(baseRef.ShapeId.Equals(Guid) && string.IsNullOrEmpty(baseRef.Name)))
+            return baseRef;
+
         // Do we have modified this shape?
         // Only redirect if the shape wasn't splitted and there is no ambiguity.
+        var ocShapeType = ocSubshape.ShapeType();
         var modList = _ModifiedShapes.Where(kvp => kvp.Value.Any(s => s.IsSame(ocSubshape))).ToArray();
-        if (modList.Length == 1 && modList[0].Value.Count == 1)
+        if (modList.Length == 1 && modList[0].Value.Count(shape => shape.ShapeType() == ocShapeType) == 1)
         {
             ocSubshape = modList[0].Key;
         }
@@ -573,16 +592,44 @@ public abstract class ModifierBase : Shape
                 return res;
         }
 
-        return base.GetSubshapeReference(ocSubshape);
+        return baseRef;
     }
 
     //--------------------------------------------------------------------------------------------------
 
     public override List<TopoDS_Shape> FindSubshape(SubshapeReference reference, Ax3? targetFrame)
     {
-        if (Guid.Equals(reference.ShapeId))
-            return base.FindSubshape(reference, targetFrame);
+        if (reference.Index < 0)
+            return null;
 
+        if (Guid.Equals(reference.ShapeId))
+        {
+            EnsureHistory();
+
+            // Named subshape?
+            if (!reference.Name.IsNullOrEmpty() && reference.Sources != null)
+            {
+                var shapes = reference.Sources.Select(sourceref =>
+                    Guid.Equals(sourceref.ShapeId)
+                        ? FindSubshape(sourceref, targetFrame)
+                        : Operands.Select(operand => operand?.FindSubshape(sourceref, GetCoordinateSystem()))
+                                                             .WhereNotNull()
+                                                             .FirstOrDefault()) // One operand that has the source shape is enough, as the source shape is unique
+                    .WhereNotNull()
+                    .SelectMany(list => list)
+                    .ToList();
+                var namedSubshape = NamedSubshapes.FirstOrDefault(ns => ns.Type == reference.Type
+                                                                        && ns.Name == reference.Name
+                                                                        && ns.Index == reference.Index
+                                                                        && ns.Sources != null
+                                                                        && ns.Sources.Length == shapes.Count
+                                                                        && ns.Sources.ContainsAllSame(shapes));
+                return namedSubshape != null ? [namedSubshape.Shape] : null;
+            }
+
+            return base.FindSubshape(reference, targetFrame);
+        }
+        
         foreach (var operand in Operands)
         {
             var subshapes = operand?.FindSubshape(reference, GetCoordinateSystem());

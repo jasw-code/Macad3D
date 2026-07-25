@@ -1,4 +1,5 @@
-﻿using Macad.Core.Shapes;
+﻿using Macad.Core;
+using Macad.Core.Shapes;
 using Macad.Test.Utils;
 using NUnit.Framework;
 using System.IO;
@@ -11,6 +12,8 @@ public class ScaleTests
     const string _BasePath = @"Modeling\Modify\Scale";
 
     //--------------------------------------------------------------------------------------------------
+
+    #region Solid
 
     [Test]
     public void SolidUniform()
@@ -44,6 +47,40 @@ public class ScaleTests
     }
 
     //--------------------------------------------------------------------------------------------------
+
+    [Test]
+    public void SolidSubshapeReferences()
+    {
+        var box = TestGeomGenerator.CreateBox();
+        box.Guid = TestData.CreateGuid(1);
+        var scale = Scale.Create(box.Body, 5.0);
+        scale.Guid = TestData.CreateGuid(10);
+        Assert.IsTrue(scale.Make(Shape.MakeFlags.None));
+
+        AssertHelper.HasValidSubshapeReferences(scale);
+        AssertHelper.IsSameSubshapeReferences(scale, Path.Combine(_BasePath, "SolidSubshapeReferences"));
+    }
+
+    //--------------------------------------------------------------------------------------------------
+
+    [Test]
+    [Description("Referencing a subshape of the original solid must return the same subshape for all instances")]
+    public void SolidResultInInModifiedList()
+    {
+        var box = TestGeomGenerator.CreateBox();
+        var scale = Scale.Create(box.Body, 5.0);
+        Assert.IsTrue(scale.Make(Shape.MakeFlags.None));
+
+        var subshapes = scale.FindSubshape(new SubshapeReference(SubshapeType.Face, box.Guid, "ZMax", 0), null);
+        Assert.IsNotNull(subshapes);
+        Assert.That(subshapes, Has.Count.EqualTo(1));
+    }
+
+    //--------------------------------------------------------------------------------------------------
+    
+    #endregion
+
+    #region Sketch
 
     [Test]
     [TestCase(TestSketchGenerator.SketchType.Circle)]
@@ -83,7 +120,41 @@ public class ScaleTests
     }
 
     //--------------------------------------------------------------------------------------------------
-    
+
+    [Test]
+    public void SketchSubshapeReferences()
+    {
+        Context.InitWithDefault();
+        var body = TestSketchGenerator.CreateSketch(TestSketchGenerator.SketchType.SimpleAsymmetric, true).Body;
+        body.Shape.Guid = TestData.CreateGuid(1);
+        var scale = Scale.Create(body, 5.0);
+        scale.Guid = TestData.CreateGuid(10);
+        Assert.IsTrue(scale.Make(Shape.MakeFlags.None));
+        
+        AssertHelper.HasValidSubshapeReferences(scale);
+        AssertHelper.IsSameSubshapeReferences(scale, Path.Combine(_BasePath, "SketchSubshapeReferences"));
+    }
+
+    //--------------------------------------------------------------------------------------------------
+
+    [Test]
+    public void SketchResultInModifiedList()
+    {
+        var sketch = TestSketchGenerator.CreateSketch(TestSketchGenerator.SketchType.Rectangle, true);
+        var scale = Scale.Create(sketch.Body, 2.0, 4.0, 6.0);
+        Assert.IsTrue(scale.Make(Shape.MakeFlags.None));
+
+        var subshapes = scale.FindSubshape(new SubshapeReference(SubshapeType.Edge, sketch.Guid, "seg", 1), null);
+        Assert.IsNotNull(subshapes);
+        Assert.That(subshapes, Has.Count.EqualTo(1));
+    }
+
+    //--------------------------------------------------------------------------------------------------
+
+    #endregion
+
+    #region Mesh
+
     [Test]
     public void MeshUniform()
     {
@@ -109,5 +180,7 @@ public class ScaleTests
     }
 
     //--------------------------------------------------------------------------------------------------
+
+    #endregion
 
 }

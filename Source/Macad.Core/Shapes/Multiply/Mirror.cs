@@ -1,10 +1,12 @@
-﻿using System.Diagnostics;
-using System.Linq;
+﻿using System;
 using Macad.Common;
+using Macad.Common.Serialization;
 using Macad.Core.Geom;
 using Macad.Core.Topology;
-using Macad.Common.Serialization;
 using Macad.Occt;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 
 namespace Macad.Core.Shapes;
 
@@ -133,6 +135,28 @@ public sealed class Mirror : ModifierBase
             }
         }
     }
+
+    //--------------------------------------------------------------------------------------------------
+
+    /// <summary>
+    /// Version of the modifier. This is used to keep the modifier working with older files.
+    /// 1 => v4.5
+    /// </summary>
+    [SerializeMember]
+    public int Version
+    {
+        get;
+        set
+        {
+            if (field != value)
+            {
+                SaveUndo();
+                field = value;
+                Invalidate();
+                RaisePropertyChanged();
+            }
+        }
+    } = 1;
 
     //--------------------------------------------------------------------------------------------------
 
@@ -289,35 +313,56 @@ public sealed class Mirror : ModifierBase
             return false;
         }
 
+        var transformedShape = makeTransform.Shape();
+        BRepTools_History transformHistory = new(sourceBRep, makeTransform);
+        if (Version >= 1)
+        {
+            UpdateModifiedSubshapes(sourceBRep, transformHistory);
+        }
+
         if (!_KeepOriginal)
         {
-            BRep = makeTransform.Shape();
-            UpdateModifiedSubshapes(sourceBRep, makeTransform);
+            // No subshape names are created, because the original shape is only transformed. The subshape names are still valid.
+            BRep = transformedShape;
             return true;
         }
 
-        // Merge Original and Copy
-        var shapeListArgs = new TopTools_ListOfShape();
-        shapeListArgs.Append(sourceBRep);
-        var shapeListTools = new TopTools_ListOfShape();
-        shapeListTools.Append(makeTransform.Shape());
+        // Transform original to create an inplace copy
+        makeTransform = new BRepBuilderAPI_Transform(sourceBRep, Trsf.Identity);
+        if (!makeTransform.IsDone())
+        {
+            Messages.Error("Failed transforming original shape.");
+            return false;
+        }
+        var inplaceShape = makeTransform.Shape();
+        BRepTools_History inplaceHistory = new(sourceBRep, makeTransform);
+        UpdateModifiedSubshapes(sourceBRep, inplaceHistory);
 
-        var algo = new BRepAlgoAPI_Fuse();
-        algo.SetArguments(shapeListArgs);
-        algo.SetTools(shapeListTools);
-        algo.Build();
-        if (!algo.IsDone())
+        // Merge inplace and mirrored copy
+        var shapeListArgs = new TopTools_ListOfShape();
+        shapeListArgs.Append(inplaceShape);
+        var shapeListTools = new TopTools_ListOfShape();
+        shapeListTools.Append(transformedShape);
+
+        var fuse = new BRepAlgoAPI_Fuse();
+        fuse.SetArguments(shapeListArgs);
+        fuse.SetTools(shapeListTools);
+        fuse.Build();
+        if (!fuse.IsDone())
         {
             Messages.Error("Failed fusing operation failed.");
             return false;
         }
         if (_KeepOriginal && _MergeFaces)
         {
-            algo.SimplifyResult(true, true);
+            fuse.SimplifyResult(true, true);
         }
+        UpdateModifiedSubshapes(inplaceShape, fuse.History());
+        UpdateModifiedSubshapes(transformedShape, fuse.History());
 
-        UpdateModifiedSubshapes(sourceBRep, algo);
-        BRep = algo.Shape();
+        SubshapeReferenceUtils.CreateSubshapeNames("Mirror", [sourceBRep], [new(1, transformHistory), new(2, inplaceHistory), new(8, fuse)], AddNamedSubshape);
+
+        BRep = fuse.Shape();
         return true;
     }
 
@@ -397,9 +442,18 @@ public sealed class Mirror : ModifierBase
         }
 
         // Do it!
-        var resultShape = Topo2dUtils.TransformSketchShape(sourceBRep, new[] {transform}, _KeepOriginal);
+        List<BRepTools_History> histories = new(_KeepOriginal ? 2 : 1);
+        var resultShape = Topo2dUtils.TransformSketchShape(sourceBRep, _KeepOriginal ? [Trsf2d.Identity, transform] : [transform], mergeWires: true, histories: histories);
         if (resultShape == null)
             return false;
+
+        // Bookkeeping
+        UpdateModifiedSubshapes(sourceBRep, histories[0]);
+        if (_KeepOriginal)
+        {
+            UpdateModifiedSubshapes(sourceBRep, histories[1]);
+            SubshapeReferenceUtils.CreateSubshapeNames("Mirror", [sourceBRep], [new(1, histories[0]), new(2, histories[1])], AddNamedSubshape);
+        }
 
         // Finalize
         BRep = resultShape;
@@ -492,6 +546,17 @@ public sealed class Mirror : ModifierBase
 
     //--------------------------------------------------------------------------------------------------
 
+    public override void OnDeserialized(SerializationContext context)
+    {
+        if (context.Version < new Version(4, 5))
+        {
+            Version = 0;
+        }
+
+        base.OnDeserialized(context);
+    }
+
+    //--------------------------------------------------------------------------------------------------
 
     #endregion
 }

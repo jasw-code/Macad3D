@@ -201,6 +201,33 @@ public class OcctSerializers
 
     //--------------------------------------------------------------------------------------------------
 
+    class OcctSerializer_BndBox : ISerializer
+    {
+        public bool Write(Writer writer, object obj, SerializationContext context)
+        {
+            var box = (Bnd_Box)obj;
+            double[] values = new double[6];
+            var pos = box.CornerMin();
+            values[0] = pos.X; values[1] = pos.Y; values[2] = pos.Z;
+            var rot = box.CornerMax();
+            values[3] = rot.X; values[4] = rot.Y; values[5] = rot.Z;
+
+            return _DoubleArraySerializer.Write(writer, values, context);
+        }
+
+        public object Read(Reader reader, object obj, SerializationContext context)
+        {
+            var values = (double[])_DoubleArraySerializer.Read(reader, null, context);
+            if (values is { Length: 6 })
+            {
+                return new Bnd_Box(new(values[0], values[1], values[2]), new(values[3], values[4], values[5]));
+            }
+            return null;
+        }
+    }
+
+    //--------------------------------------------------------------------------------------------------
+
     static bool _IsInitialized;
     static ISerializer _DoubleArraySerializer;
 
@@ -221,6 +248,7 @@ public class OcctSerializers
         Serializer.AddSerializer(typeof(Ax1), new OcctSerializer_Ax1());
         Serializer.AddSerializer(typeof(Ax2), new OcctSerializer_Ax2());
         Serializer.AddSerializer(typeof(Pln), new OcctSerializer_Pln());
+        Serializer.AddSerializer(typeof(Bnd_Box), new OcctSerializer_BndBox());
 
         _IsInitialized = true;
     }

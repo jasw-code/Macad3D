@@ -23,3 +23,17 @@
 #pragma comment(lib, "TKService.lib")
 #pragma comment(lib, "TKV3d.lib")
 #pragma comment(lib, "TKOpenGl.lib")
+
+
+using namespace System::Diagnostics;
+
+[assembly:DebuggerDisplay("{ShapeType()} {GetHashCode().ToString(\"X\")}", Target = Macad::Occt::TopoDS_Shape::typeid)];
+[assembly:DebuggerDisplay("{ShapeType()} {GetHashCode().ToString(\"X\")}", Target = Macad::Occt::TopoDS_Vertex::typeid)];
+[assembly:DebuggerDisplay("{ShapeType()} {GetHashCode().ToString(\"X\")}", Target = Macad::Occt::TopoDS_Edge::typeid)];
+[assembly:DebuggerDisplay("{ShapeType()} {GetHashCode().ToString(\"X\")}", Target = Macad::Occt::TopoDS_Face::typeid)];
+[assembly:DebuggerDisplay("{ShapeType()} {GetHashCode().ToString(\"X\")}", Target = Macad::Occt::TopoDS_Wire::typeid)];
+[assembly:DebuggerDisplay("{ShapeType()} {GetHashCode().ToString(\"X\")}", Target = Macad::Occt::TopoDS_Shell::typeid)];
+[assembly:DebuggerDisplay("{ShapeType()} {GetHashCode().ToString(\"X\")}", Target = Macad::Occt::TopoDS_Solid::typeid)];
+[assembly:DebuggerDisplay("{ShapeType()} {GetHashCode().ToString(\"X\")}", Target = Macad::Occt::TopoDS_CompSolid::typeid)];
+[assembly:DebuggerDisplay("{ShapeType()} {GetHashCode().ToString(\"X\")}", Target = Macad::Occt::TopoDS_Compound::typeid)];
+

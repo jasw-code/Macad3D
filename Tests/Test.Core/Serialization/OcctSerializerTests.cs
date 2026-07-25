@@ -157,4 +157,23 @@ public class OcctSerializerTests
 
     //--------------------------------------------------------------------------------------------------
 
+    [Test]
+    public void Serialize_BndBox()
+    {
+        var originalValue = new Bnd_Box(new(1.5, 42.3, 11), new(2.5, 43.3, 12));
+        var w = new Writer();
+        var serializer = Serializer.GetSerializer(typeof(Bnd_Box));
+        Assert.NotNull(serializer);
+        serializer.Write(w, originalValue, null);
+        Assert.True(w.IsValid());
+        Assert.AreEqual("[1.5,42.3,11,2.5,43.3,12]", w.ToString());
+
+        var r = new Reader(w.ToString());
+        var targetValue = serializer.Read(r, null, null) as Bnd_Box;
+        Assert.False(r.AnyLeft);
+        Assert.AreEqual(0, originalValue.Distance(targetValue));
+    }
+
+    //--------------------------------------------------------------------------------------------------
+
 }

@@ -5,3 +5,4 @@
 *.user
 launchSettings.json
 *.args.json
+*_TestResult.*

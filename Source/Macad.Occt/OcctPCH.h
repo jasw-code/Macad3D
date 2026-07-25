@@ -42,6 +42,7 @@ typedef void* Aspect_FBConfig;
 #include "ValueTypes\ValueTypes.h"
 
 #include "Extensions/BRep_Ex.h"
+#include "Extensions/BRepTools_Ex.h"
 #include "Extensions/Graphic3d_Ex.h"
 #include "Extensions/Geom2dAPI_Ex.h"
 #include "Extensions/TopoDS_Ex.h"

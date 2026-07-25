@@ -1,8 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using Macad.Common;
+using Macad.Occt;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using Macad.Common;
-using Macad.Occt;
+using System.Runtime.InteropServices;
 
 namespace Macad.Core.Geom;
 
@@ -124,14 +125,21 @@ public static class EdgeAlgo
     /// </summary>
     public static (TopoDS_Face face1, TopoDS_Face face2) FindAdjacentFaces(TopoDS_Shape shape, TopoDS_Edge edgeShape)
     {
-        // Create a Map of Edge and connected Faces
-        var mapOfEdgesToFaces = new TopTools_IndexedDataMapOfShapeListOfShape(1);
-        TopExp.MapShapesAndAncestors(shape, TopAbs_ShapeEnum.EDGE, TopAbs_ShapeEnum.FACE, mapOfEdgesToFaces);
-
-        var faces = mapOfEdgesToFaces.FindFromKey(edgeShape).ToList();
-        var face1 = faces.Count > 0 ? faces[0].ToFace() : null;
-        var face2 = faces.Count > 1 ? faces[1].ToFace() : null;
-        return (face1, face2);
+        try
+        {
+            // Create a Map of Edge and connected Faces
+            var mapOfEdgesToFaces = new TopTools_IndexedDataMapOfShapeListOfShape(1);
+            TopExp.MapShapesAndAncestors(shape, TopAbs_ShapeEnum.EDGE, TopAbs_ShapeEnum.FACE, mapOfEdgesToFaces);
+            var faces = mapOfEdgesToFaces.FindFromKey(edgeShape).ToList();
+            var face1 = faces.Count > 0 ? faces[0].ToFace() : null;
+            var face2 = faces.Count > 1 ? faces[1].ToFace() : null;
+            return (face1, face2);
+        }
+        catch (SEHException)
+        {
+            // Occurs when edge does not belong to any face.
+            return (null, null);
+        }
     }
 
     //--------------------------------------------------------------------------------------------------
@@ -229,6 +237,36 @@ public static class EdgeAlgo
 
         var adaptorEdge = edge.Adaptor();
         return (adaptorEdge.FirstParameter() + adaptorEdge.LastParameter()) * 0.5;
+    }
+
+    //--------------------------------------------------------------------------------------------------
+
+    /// <summary>
+    /// Searches for adjacent edges in a given face
+    /// </summary>
+    public static (TopoDS_Edge Edge1, TopoDS_Edge Edge2) FindAdjacentEdges(TopoDS_Face face, TopoDS_Edge edge)
+    {
+        // Create a Map of Vertex and connected edges
+        var mapOfVerticesToEdges = new TopTools_IndexedDataMapOfShapeListOfShape(1);
+        TopExp.MapShapesAndAncestors(face, TopAbs_ShapeEnum.VERTEX, TopAbs_ShapeEnum.EDGE, mapOfVerticesToEdges);
+        var edgeVertices = edge.Vertices();
+        Debug.Assert(edgeVertices.Count == 2);
+
+        var edge1 = mapOfVerticesToEdges.FindFromKey(edgeVertices[0]).FirstOrDefault(e => !e.IsSame(edge))?.ToEdge();
+        var edge2 = mapOfVerticesToEdges.FindFromKey(edgeVertices[1]).FirstOrDefault(e => !e.IsSame(edge))?.ToEdge();
+        return (edge1, edge2);
+    }
+
+    //--------------------------------------------------------------------------------------------------
+
+    /// <summary>
+    /// Checks if the given edge is part of the given shape (e.g. part of a face or solid).
+    /// </summary>
+    public static bool IsEdgeInShape(TopoDS_Edge edge, TopoDS_Shape shape)
+    {
+        TopTools_IndexedMapOfShape edgeMap = new();
+        TopExp.MapShapes(shape, TopAbs_ShapeEnum.EDGE, edgeMap);
+        return edgeMap.Contains(edge);
     }
 
     //--------------------------------------------------------------------------------------------------

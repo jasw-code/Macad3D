@@ -109,7 +109,7 @@ public sealed class LinearArray : ModifierBase
             if (_Quantity1 != value && value > 0)
             {
                 SaveUndo();
-                _Quantity1 = value;
+                _Quantity1 = Math.Min(value, 0xfff);
                 Invalidate();
                 RaisePropertyChanged();
             }
@@ -181,7 +181,7 @@ public sealed class LinearArray : ModifierBase
             if (_Quantity2 != value && value > 0)
             {
                 SaveUndo();
-                _Quantity2 = value;
+                _Quantity2 = Math.Min(value, 0xfff);
                 Invalidate();
                 RaisePropertyChanged();
             }
@@ -396,26 +396,39 @@ public sealed class LinearArray : ModifierBase
 
         // Build Transforms
         List<Trsf2d> transforms = new List<Trsf2d>((int)(Quantity1 * Quantity2));
+        List<(int, int)> indices = new();
         for (var index1 = 0; index1 < Quantity1; index1++)
         {
             for (var index2 = 0; index2 < Quantity2; index2++)
             {
                 if (_Border && index1 != 0 && index1 != Quantity1 - 1
-                    && index2 != 0 && index2 != Quantity2 - 1)
+                            && index2 != 0 && index2 != Quantity2 - 1)
                 {
                     continue; // Skip inner parts
                 }
-        
+
                 var transform = new Trsf2d();
-                transform.SetTranslation(interval1 * index1 + interval2 * index2 + offset);
+                Vec2d translation = interval1 * index1 + interval2 * index2 + offset;
+                transform.SetTranslation(translation);
                 transforms.Add(transform);
+                indices.Add((index1, index2));
             }
         }
 
         // Do it!
-        var resultShape = Topo2dUtils.TransformSketchShape(sourceBRep, transforms, false);
+        List<BRepTools_History> histories = new(transforms.Count);
+        var resultShape = Topo2dUtils.TransformSketchShape(sourceBRep, transforms, histories: histories);
         if (resultShape == null)
             return false;
+
+        // Bookkeeping
+        for (var index = 0; index < histories.Count; index++)
+        {
+            var history = histories[index];
+            var (index1, index2) = indices[index];
+            SubshapeReferenceUtils.CreateSubshapeNames("Copy", [sourceBRep], [new(index2 << 12 | index1, history)], AddNamedSubshape);
+            UpdateModifiedSubshapes(sourceBRep, history);
+        }
 
         // Finalize
         BRep = resultShape;
@@ -488,15 +501,21 @@ public sealed class LinearArray : ModifierBase
                     continue; // Skip inner parts
                 }
 
+                Vec translation = interval1 * index1 + interval2 * index2 + offset;
                 var transform = new Trsf();
-                transform.SetTranslation(interval1 * index1 + interval2 * index2 + offset);
+                transform.SetTranslation(translation);
                 var makeTransform = new BRepBuilderAPI_Transform(sourceBRep, transform);
                 if (!makeTransform.IsDone())
                 {
                     Messages.Error("Failed transforming shape.");
                     return false;
                 }
+
                 builder.Add(resultShape, makeTransform.Shape());
+
+                BRepTools_History history = new(sourceBRep, makeTransform);
+                SubshapeReferenceUtils.CreateSubshapeNames("Copy", [sourceBRep], [new(index2 << 12 | index1, history)], AddNamedSubshape);
+                UpdateModifiedSubshapes(sourceBRep, history);
             }
         }
 

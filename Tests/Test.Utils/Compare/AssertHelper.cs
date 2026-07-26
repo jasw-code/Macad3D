@@ -18,12 +18,6 @@ namespace Macad.Test.Utils;
 
 //--------------------------------------------------------------------------------------------------
 
-[SerializeType]
-record SubshapeReferenceData([property: SerializeMember] SubshapeReference Reference, [property: SerializeMember] Pnt CenterOfMass);
-
-//--------------------------------------------------------------------------------------------------
-//--------------------------------------------------------------------------------------------------
-
 public static class AssertHelper
 {
     public static void IsSameModel(Shape shape, string brepFile, ModelCompare.CompareFlags flags = ModelCompare.CompareFlags.CompareProperties)

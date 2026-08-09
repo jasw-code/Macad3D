@@ -2,6 +2,7 @@
 using Macad.Test.UI.Framework;
 using NUnit.Framework;
 using System;
+using System.IO;
 
 namespace Macad.Test.UI.Editors.Toolkits;
 
@@ -65,7 +66,13 @@ public class SliceContourUITests : UITestBase
             
         var fileDlg = new FileDialogAdaptor(MainWindow);
         Assert.That(fileDlg.Title, Is.EqualTo("Export..."));
-        fileDlg.Save("ExportedSliceContour.svg");
+        var path = Path.Combine(FileDialogAdaptor.GetTempPath(), "ExportedSliceContour.svg");
+        fileDlg.Save(path, checkFile: false);
+
+        var settingsDlg = new WindowAdaptor(MainWindow, "ExchangerSettings");
+        settingsDlg.Click("Ok");
+        Assert.IsFalse(WindowAdaptor.IsWindowOpen(MainWindow, "ExchangerSettings"));
+        FileDialogAdaptor.CheckFileExists(path);
     }
 
     //--------------------------------------------------------------------------------------------------

@@ -1,6 +1,8 @@
 ﻿using FlaUI.Core.AutomationElements;
 using FlaUI.Core.Definitions;
+using FlaUI.Core.Identifiers;
 using FlaUI.Core.Input;
+using FlaUI.UIA3.Patterns;
 using NUnit.Framework;
 
 namespace Macad.Test.UI.Framework;
@@ -29,7 +31,14 @@ public class ContextMenuAdaptor : WindowAdaptor
                             ?? Window.FindFirstDescendant(cf => cf.ByControlType(ControlType.MenuItem).And(cf.ByName(name))))
             ?.AsMenuItem();
         Assert.IsNotNull(menuItemCtrl, $"MenuItem {name} not found in current context menu.");
-        menuItemCtrl.Invoke();
+        if (menuItemCtrl.IsPatternSupported(InvokePattern.Pattern))
+        {
+
+        }
+        else
+        {
+            menuItemCtrl.Click();
+        }
         Wait.UntilInputIsProcessed();
         Wait.UntilResponsive(Window);
     }

@@ -2,6 +2,7 @@
 using Macad.Test.UI.Framework;
 using NUnit.Framework;
 using System;
+using System.IO;
 
 namespace Macad.Test.UI.Editors.Toolkits;
 
@@ -63,8 +64,6 @@ public class EtchingMaskUITests : UITestBase
     [Test]
     public void Export()
     {
-        var viewport = MainWindow.Viewport;
-
         // Create box
         GenerateBox();
 
@@ -81,7 +80,14 @@ public class EtchingMaskUITests : UITestBase
             
         var fileDlg = new FileDialogAdaptor(MainWindow);
         Assert.That(fileDlg.Title, Is.EqualTo("Export..."));
-        fileDlg.Save("ExportedEtchingMask.svg");
+
+        var path = Path.Combine(FileDialogAdaptor.GetTempPath(), "ExportedEtchingMask.svg");
+        fileDlg.Save(path, checkFile: false);
+
+        var settingsDlg = new WindowAdaptor(MainWindow, "ExchangerSettings");
+        settingsDlg.Click("Ok");
+        Assert.IsFalse(WindowAdaptor.IsWindowOpen(MainWindow, "ExchangerSettings"));
+        FileDialogAdaptor.CheckFileExists(path);
     }
 
     //--------------------------------------------------------------------------------------------------

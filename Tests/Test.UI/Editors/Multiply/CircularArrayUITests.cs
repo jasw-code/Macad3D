@@ -54,7 +54,7 @@ public class CircularArrayUITests : UITestBase
         MainWindow.Ribbon.ClickButton("CreateCircularArray");
         Assert.IsTrue(MainWindow.Ribbon.IsChecked("CreateCircularArray"));
 
-        MainWindow.Viewport.ClickRelative(0.3, 0.33);
+        MainWindow.Viewport.ClickRelative(0.3, 0.4);
         Assert.IsFalse(MainWindow.Ribbon.IsChecked("CreateCircularArray"));
     }
 }

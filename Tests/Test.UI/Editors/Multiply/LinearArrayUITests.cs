@@ -54,7 +54,7 @@ public class LinearArrayUITests : UITestBase
         MainWindow.Ribbon.ClickButton("CreateLinearArray");
         Assert.IsTrue(MainWindow.Ribbon.IsChecked("CreateLinearArray"));
 
-        MainWindow.Viewport.ClickRelative(0.3, 0.33);
+        MainWindow.Viewport.ClickRelative(0.3, 0.4);
         Assert.IsFalse(MainWindow.Ribbon.IsChecked("CreateLinearArray"));
     }
 }

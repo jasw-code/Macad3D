@@ -1,0 +1,60 @@
+<DrawingGroup ClipGeometry="{x:Null}" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <DrawingGroup.Children>
+    <DrawingGroup>
+      <DrawingGroup.Children>
+        <GeometryDrawing Brush="{x:Null}">
+          <GeometryDrawing.Pen>
+            <Pen Brush="#FF000000" Thickness="0.10000000149011612" StartLineCap="Round" EndLineCap="Round" LineJoin="Miter" MiterLimit="1">
+              <Pen.DashStyle>
+                <DashStyle Offset="0" Dashes="3.999999940395356 1.999999970197678" />
+              </Pen.DashStyle>
+            </Pen>
+          </GeometryDrawing.Pen>
+          <GeometryDrawing.Geometry>
+            <EllipseGeometry RadiusX="5.220153254455275" RadiusY="2.088095393413773" Center="0,0">
+              <EllipseGeometry.Transform>
+                <TransformGroup>
+                  <TransformGroup.Children>
+                    <TranslateTransform X="0" Y="-0" />
+                    <RotateTransform Angle="-73.30075576600639" CenterX="0" CenterY="-0" />
+                  </TransformGroup.Children>
+                </TransformGroup>
+              </EllipseGeometry.Transform>
+            </EllipseGeometry>
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Brush="{x:Null}">
+          <GeometryDrawing.Pen>
+            <Pen Brush="#FF000000" Thickness="0.10000000149011612" StartLineCap="Round" EndLineCap="Round" LineJoin="Miter" MiterLimit="1">
+              <Pen.DashStyle>
+                <DashStyle Offset="0" Dashes="3.999999940395356 1.999999970197678" />
+              </Pen.DashStyle>
+            </Pen>
+          </GeometryDrawing.Pen>
+          <GeometryDrawing.Geometry>
+            <PathGeometry FillRule="EvenOdd" Figures="M-10,10L-10,-10L10,-10L0,-10 M1.5,-5C1.2854987405938476,-5.064350377821844,1.0449344223911923,-5.041685377494736,0.7905683824545537,-4.933160212770273C0.5362023425179153,-4.824635048045811,0.2681249983254384,-4.6302882955032905,1.6653345369377348E-16,-4.3600256263483805 M1.5000000000000004,-5C1.7418981942834806,-4.927430541714959,1.9504571183922284,-4.743982490276753,2.1122138185028754,-4.461497835454261C2.273970518613522,-4.179013180631769,2.388832122801973,-3.7976541097928114,2.4493840527667925,-3.342038220015865C2.509935982731612,-2.886422330238919,2.516143472838737,-2.3568112114568964,2.467605815455884,-1.7873924682855105C2.41906815807303,-1.217973725114123,2.315813220890555,-0.6090742869124386,2.1645063454049396,-8.881784197001252E-16 M10,-0L0,-0L0,-10L10,-10L10,-0L10,-10L10,10L-10,10" />
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+      </DrawingGroup.Children>
+    </DrawingGroup>
+    <DrawingGroup>
+      <DrawingGroup.Children>
+        <GeometryDrawing Brush="{x:Null}">
+          <GeometryDrawing.Pen>
+            <Pen Brush="#FF000000" Thickness="0.20000000298023224" StartLineCap="Round" EndLineCap="Round" LineJoin="Miter" MiterLimit="1" />
+          </GeometryDrawing.Pen>
+          <GeometryDrawing.Geometry>
+            <PathGeometry FillRule="EvenOdd" Figures="M-10,10L-10,-10L0,-10 M2.220446049250313E-16,-4.3600256263483805C-0.43628857612629823,-3.9202586674966993,-0.8720379500165324,-3.2774325824363055,-1.2498875822108864,-2.5161667721974554C-1.6277372144052402,-1.7549009619586062,-1.946753147987471,-0.8770770995879197,-2.1649412295680137,0.0017511198014056317C-2.3831293111485565,0.880579339190732,-2.499950230243898,1.75823965546198,-2.5000260853789857,2.5191999021444476C-2.5001019405140736,3.2801601488269148,-2.3834325441925537,3.9225394081564473,-2.1653758519559516,4.361777097695527C-2.0563475058376506,4.5813959424650665,-1.922457469510035,4.750900927762847,-1.768246397649225,4.864543578009728C-1.614035325788416,4.978186228256609,-1.4395272763716112,5.035948814425389,-1.2506403954561207,5.035872415866066C-0.8728666336251389,5.035719618747422,-0.4371578817776717,4.800403976439159,-0.000869332028417158,4.3609016256724376C0.43541921772083736,3.9213992749057165,0.8712091609649485,3.2787965638604093,1.2491346178347649,2.5176834893845337C1.6270600747045807,1.7565704149086594,1.9461869008627954,0.8788282725213407,2.1645063454049396,-1.3322676295501878E-15 M10,-0L0,-0L0,-10L10,-10L10,-0L10,10L-10,10" />
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+      </DrawingGroup.Children>
+    </DrawingGroup>
+  </DrawingGroup.Children>
+  <DrawingGroup.Transform>
+    <TransformGroup>
+      <TransformGroup.Children>
+        <TranslateTransform X="20.0000001" Y="20.0000001" />
+      </TransformGroup.Children>
+    </TransformGroup>
+  </DrawingGroup.Transform>
+</DrawingGroup>

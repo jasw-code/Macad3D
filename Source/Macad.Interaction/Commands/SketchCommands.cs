@@ -102,9 +102,7 @@ public static class SketchCommands
 
             if (ExportDialog.Execute<ISketchExporter>(out var filename, out var exporter))
             {
-                if (!ExchangerSettings.Execute<ISketchExporter>(exporter))
-                    return;
-                if (!(exporter as ISketchExporter)?.DoExport(filename, tool.Sketch) ?? false)
+                if (!exporter?.DoExport(filename, tool.Sketch) ?? false)
                 {
                     ErrorDialogs.CannotExport(filename);
                 }

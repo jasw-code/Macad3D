@@ -44,7 +44,7 @@ public class SvgExportDrawingTests
         Assert.IsTrue(imprint.Make(Shape.MakeFlags.None));
 
         // Create Hlr Exporter
-        var svg = RunExporter(false, _Projection, imprint.Body);
+        var svg = RunExporter(false, _Projection, null, imprint.Body);
             
         // Write to file and compare
         AssertHelper.IsSameTextFile(Path.Combine(_BasePath, "Simple.svg"), svg, AssertHelper.TextCompareFlags.IgnoreFloatPrecision);
@@ -61,7 +61,7 @@ public class SvgExportDrawingTests
         Assert.IsTrue(imprint.Make(Shape.MakeFlags.None));
 
         // Create Hlr Exporter
-        var svg = RunExporter(true, _Projection, imprint.Body);
+        var svg = RunExporter(true, _Projection, null, imprint.Body);
 
         // Write to file and compare
         AssertHelper.IsSameTextFile(Path.Combine(_BasePath, "PolySimple.svg"), svg, AssertHelper.TextCompareFlags.IgnoreFloatPrecision);
@@ -76,7 +76,7 @@ public class SvgExportDrawingTests
         var body = TestData.GetBodyFromBRep(@"SourceData\Brep\Motor-c.brep");
 
         // Create Hlr Exporter
-        var svg = RunExporter(false, _Projection, body);
+        var svg = RunExporter(false, _Projection, null, body);
 
         // Write to file and compare
         AssertHelper.IsSameTextFile(Path.Combine(_BasePath, "Complex.svg"), svg, AssertHelper.TextCompareFlags.IgnoreFloatPrecision);
@@ -91,7 +91,7 @@ public class SvgExportDrawingTests
         var body = TestData.GetBodyFromBRep(@"SourceData\Brep\Rudder.brep");
 
         // Create Hlr Exporter
-        var svg = RunExporter(false, _Projection, body);
+        var svg = RunExporter(false, _Projection, null, body);
 
         // Write to file and compare
         AssertHelper.IsSameTextFile(Path.Combine(_BasePath, "RudderBlade.svg"), svg, AssertHelper.TextCompareFlags.IgnoreFloatPrecision);
@@ -107,7 +107,7 @@ public class SvgExportDrawingTests
         var body = TestData.GetBodyFromBRep(@"SourceData\Brep\Motor-c.brep");
 
         // Create Hlr Exporter
-        var svg = RunExporter(true, _Projection, body);
+        var svg = RunExporter(true, _Projection, null, body);
 
         // Write to file and compare
         AssertHelper.IsSameTextFile(Path.Combine(_BasePath, "PolyComplex.svg"), svg, AssertHelper.TextCompareFlags.IgnoreFloatPrecision);
@@ -123,7 +123,7 @@ public class SvgExportDrawingTests
         Assert.IsTrue(imprint.Make(Shape.MakeFlags.None));
 
         // Create Hlr Exporter
-        var svg = RunExporter(false, _TopProjection, imprint.Body );
+        var svg = RunExporter(false, _TopProjection, null, imprint.Body );
 
         // Write to file and compare
         AssertHelper.IsSameTextFile(Path.Combine(_BasePath, "Circle.svg"), svg, AssertHelper.TextCompareFlags.IgnoreFloatPrecision);
@@ -142,7 +142,7 @@ public class SvgExportDrawingTests
         Assert.IsTrue(box.Make(Shape.MakeFlags.None));
 
         // Create Hlr Exporter
-        var svg = RunExporter(false, _TopProjection, imprint.Body, box.Body);
+        var svg = RunExporter(false, _TopProjection, null, imprint.Body, box.Body);
 
         // Write to file and compare
         AssertHelper.IsSameTextFile(Path.Combine(_BasePath, "CircleArc.svg"), svg, AssertHelper.TextCompareFlags.IgnoreFloatPrecision);
@@ -158,14 +158,32 @@ public class SvgExportDrawingTests
         Assert.IsTrue(imprint.Make(Shape.MakeFlags.None));
 
         // Create Hlr Exporter
-        var svg = RunExporter(false, _TopProjection, imprint.Body);
+        var svg = RunExporter(false, _TopProjection, null, imprint.Body);
 
         // Write to file and compare
         AssertHelper.IsSameTextFile(Path.Combine(_BasePath, "Ellipse.svg"), svg, AssertHelper.TextCompareFlags.IgnoreFloatPrecision);
     }
 
     //--------------------------------------------------------------------------------------------------
-        
+
+    [Test]
+    [Description("Correct transformation of ellipse coordinates if they have a translation")]
+    public void EllipseTranslated()
+    {
+        // Create simple geometry
+        var imprint = TestGeomGenerator.CreateImprint(TestSketchGenerator.SketchType.Ellipse);
+        imprint.Body.Position = new Pnt(20, 30, 40);
+        Assert.IsTrue(imprint.Make(Shape.MakeFlags.None));
+
+        // Create Hlr Exporter
+        var svg = RunExporter(false, _TopProjection, HlrEdgeTypes.VisibleSharp, imprint.Body);
+
+        // Write to file and compare
+        AssertHelper.IsSameTextFile(Path.Combine(_BasePath, "EllipseTranslated.svg"), svg, AssertHelper.TextCompareFlags.IgnoreFloatPrecision);
+    }
+
+    //--------------------------------------------------------------------------------------------------
+
     [Test]
     public void EllipseArc()
     {
@@ -178,7 +196,7 @@ public class SvgExportDrawingTests
         Assert.IsTrue(box.Make(Shape.MakeFlags.None));
 
         // Create Hlr Exporter
-        var svg = RunExporter(false, _TopProjection, imprint.Body, box.Body);
+        var svg = RunExporter(false, _TopProjection, null, imprint.Body, box.Body);
 
         // Write to file and compare
         AssertHelper.IsSameTextFile(Path.Combine(_BasePath, "EllipseArc.svg"), svg, AssertHelper.TextCompareFlags.IgnoreFloatPrecision);
@@ -348,7 +366,7 @@ public class SvgExportDrawingTests
 
         // Create Hlr Exporter
         SvgExporterBase.TagGroupsAsLayers = true;
-        var svg = RunExporter(false, _Projection, imprint.Body);
+        var svg = RunExporter(false, _Projection, null, imprint.Body);
         SvgExporterBase.TagGroupsAsLayers = false;
             
         // Write to file and compare
@@ -382,12 +400,12 @@ public class SvgExportDrawingTests
 
     #region Helper
 
-    MemoryStream RunExporter(bool useTriangulation, Ax3 projection, params Body[] bodies)
+    MemoryStream RunExporter(bool useTriangulation, Ax3 projection, HlrEdgeTypes? hlrEdgeTypes = null, params Body[] bodies)
     {
-        var hlrEdgeTypes = HlrEdgeTypes.VisibleSharp | HlrEdgeTypes.VisibleOutline | HlrEdgeTypes.VisibleSmooth 
-                           | HlrEdgeTypes.HiddenSharp | HlrEdgeTypes.HiddenOutline;
+        hlrEdgeTypes ??= HlrEdgeTypes.VisibleSharp | HlrEdgeTypes.VisibleOutline | HlrEdgeTypes.VisibleSmooth
+                         | HlrEdgeTypes.HiddenSharp | HlrEdgeTypes.HiddenOutline;
         IBrepSource[] sources = bodies.Select(body => (IBrepSource)new BodyBrepSource(body)).ToArray();
-        var hlrBrepDrawing = HlrDrawing.Create(projection, hlrEdgeTypes, sources);
+        var hlrBrepDrawing = HlrDrawing.Create(projection, hlrEdgeTypes.Value, sources);
         hlrBrepDrawing.UseTriangulation = useTriangulation;
 
         var drawing = new Drawing();

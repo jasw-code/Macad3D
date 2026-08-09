@@ -307,24 +307,20 @@ public sealed class EtchingMaskComponent : Component, IShapeDependent
 
         return true;
     }
-        
+
     //--------------------------------------------------------------------------------------------------
 
     #endregion
 
     #region Export
 
-    public bool Export(string fileName, IExchanger exchanger)
+    public Drawing.Drawing CreateDrawing()
     {
         if (!IsValid)
         {
             Messages.Error("The etching mask data could not be generated.");
-            return false;
+            return null;
         }
-
-        var exporter = exchanger as IDrawingExporter;
-        if (exporter == null)
-            return false;
 
         Drawing.Drawing drawing = new()
         {
@@ -341,6 +337,22 @@ public sealed class EtchingMaskComponent : Component, IShapeDependent
             };
             drawing.Add(drawingLayer);
         }
+
+        return drawing;
+    }
+
+    //--------------------------------------------------------------------------------------------------
+
+    public bool Export(string fileName, IExchanger exchanger)
+    {
+        var drawing = CreateDrawing();
+        if (drawing == null)
+            return false;
+
+        var exporter = exchanger as IDrawingExporter;
+        if (exporter == null)
+            return false;
+
         return exporter.DoExport(fileName, drawing);
     }
 

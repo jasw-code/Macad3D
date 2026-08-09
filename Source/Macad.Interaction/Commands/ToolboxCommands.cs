@@ -86,7 +86,7 @@ public static class ToolboxCommands
     public static ActionCommand ExportViewHlr { get; } = new(
         () =>
         {
-            ExportViewportHlr.Execute(Application.Current.MainWindow, InteractiveContext.Current?.ViewportController?.Viewport);
+            DrawingExportDialog.Execute(Application.Current.MainWindow, new ViewportHlrDrawingPanel(InteractiveContext.Current?.ViewportController?.Viewport));
         },
         () => InteractiveContext.Current?.ViewportController?.Viewport != null)
     {
@@ -168,22 +168,7 @@ public static class ToolboxCommands
                 return; // That shouldn't ever happen
             }
 
-            if (!ExportDialog.Execute<IDrawingExporter>(out string fileName, out var exporter))
-                return; // Cancelled
-
-            if (!ExchangerSettings.Execute<IDrawingExporter>(exporter))
-                return;
-
-            Drawing drawing = new()
-            {
-                Name = "Pipe"
-            };
-            drawing.Add(PipeDrawing.Create(body));
-
-            if (!exporter.DoExport(fileName, drawing))
-            {
-                ErrorDialogs.CannotExport(fileName);
-            }
+            DrawingExportDialog.Execute(Application.Current.MainWindow, new PipeDrawingPanel(body));
         },
         () => CanExecuteOnSingleSolid() 
               && PipeDrawing.FindPipeModifier(Selection.SelectedEntities.First() as Body) != null)

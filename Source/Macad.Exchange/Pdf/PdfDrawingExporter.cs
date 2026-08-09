@@ -96,7 +96,7 @@ internal sealed class PdfDrawingExporter: IDrawingRenderer, IRendererCapabilitie
             if(stroke.LineStyle == LineStyle.Solid)
                 _ContentBuilder.SetLinePattern();
             else
-                _ContentBuilder.SetLinePattern(stroke.LineStyle.Pattern().Select(w => w * 0.1).ToArray());
+                _ContentBuilder.SetLinePattern(stroke.LineStyle.Pattern());
 
             if (stroke.Color.HasValue)
             {

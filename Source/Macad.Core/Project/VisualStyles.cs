@@ -69,51 +69,37 @@ public static class StyleHelper
 {
     #region Collections
 
-    public struct LineStyleDescription
+    public readonly struct LineStyleDescription(LineStyle style, string name, double[] pattern)
     {
-        public LineStyle Style { get; }
-        public string Name { get; }
-        public double[] Pattern { get; }
-
-        public LineStyleDescription(LineStyle style, string name, double[] pattern)
-        {
-            Style = style;
-            Name = name;
-            Pattern = pattern;
-        }
+        public LineStyle Style { get; } = style;
+        public string Name { get; } = name;
+        public double[] Pattern { get; } = pattern;
     }
 
     public static readonly LineStyleDescription[] LineStyleDescriptions =
-    {
-        new (LineStyle.Solid, "Solid", new []{10.0, 0.0}),
-        new (LineStyle.Dash, "Dash", new []{4.0, 2.0}),
-        new (LineStyle.ShortDash, "Short Dash", new []{2.0, 2.0}),
-        new (LineStyle.Dot, "Dot", new []{1.0, 1.0}),
-        new (LineStyle.DotDash, "Dot-Dash", new []{5.0, 2.0, 1.0, 2.0}),
-    };
+    [
+        new (LineStyle.Solid, "Solid", [1.0, 0.0]),
+        new (LineStyle.Dash, "Dash", [0.4, 0.2]),
+        new (LineStyle.ShortDash, "Short Dash", [0.2, 0.2]),
+        new (LineStyle.Dot, "Dot", [0.1, 0.1]),
+        new (LineStyle.DotDash, "Dot-Dash", [0.5, 0.2, 0.1, 0.2])
+    ];
 
     //--------------------------------------------------------------------------------------------------
 
-    public struct LineThicknessDescription
+    public readonly struct LineThicknessDescription(LineThickness thickness, string name, double width)
     {
-        public LineThickness Thickness { get; }
-        public string Name { get; }
-        public double Width { get; }
-
-        public LineThicknessDescription(LineThickness thickness, string name, double width)
-        {
-            Thickness = thickness;
-            Name = name;
-            Width = width;
-        }
+        public LineThickness Thickness { get; } = thickness;
+        public string Name { get; } = name;
+        public double Width { get; } = width;
     }
 
     public static readonly LineThicknessDescription[] LineThicknessDescriptions =
-    {
+    [
         new (LineThickness.Thin, "Thin", 1.0),
         new (LineThickness.Normal, "Normal", 2.0),
-        new (LineThickness.Thick, "Thick", 3.0),
-    };
+        new (LineThickness.Thick, "Thick", 3.0)
+    ];
 
     //--------------------------------------------------------------------------------------------------
 

@@ -144,6 +144,7 @@ public static class BrepRenderHelper
             return false;
 
         reverse ^= edge.Orientation() == TopAbs_Orientation.REVERSED;
+
         return RenderCurve(renderer, curve, first, last, reverse);
     }
 
@@ -169,7 +170,7 @@ public static class BrepRenderHelper
                 return RenderBezierCurve(renderer, bezier, first, last, reverse);
 
             case Geom2d_TrimmedCurve trimmed:
-                return RenderCurve(renderer, trimmed.BasisCurve(), Math.Max(first, trimmed.FirstParameter()), Math.Min(last, trimmed.LastParameter()), reverse);
+                return RenderCurve(renderer, trimmed.BasisCurve(), first, last, reverse);
 
             default:
                 // Try to create B-Spline curve
@@ -205,7 +206,7 @@ public static class BrepRenderHelper
             var bsplineCurve = ShapeConstruct.ConvertCurveToBSpline(circle, first, last, 0.001, GeomAbs_Shape.C2, 100, 3);
             if (bsplineCurve != null)
             {
-                return RenderBSplineCurve(renderer, bsplineCurve, first, last, reverse);
+                return RenderBSplineCurve(renderer, bsplineCurve, bsplineCurve.FirstParameter(), bsplineCurve.LastParameter(), reverse);
             }
             return false;
         }
@@ -241,7 +242,7 @@ public static class BrepRenderHelper
             var bsplineCurve = ShapeConstruct.ConvertCurveToBSpline(ellipse, first, last, 0.001, GeomAbs_Shape.C1, 100, 3);
             if (bsplineCurve != null)
             {
-                return RenderBSplineCurve(renderer, bsplineCurve, first, last, reverse);
+                return RenderBSplineCurve(renderer, bsplineCurve, bsplineCurve.FirstParameter(), bsplineCurve.LastParameter(), reverse);
             }
             return false;
         }
@@ -317,7 +318,9 @@ public static class BrepRenderHelper
                 // too small, just skip
                 return true;
             }
+
             var converter = new Geom2dConvert_BSplineCurveToBezierCurve(bspline, first, last, 0.001 /*Precision.PConfusion() * 10*/);
+            //var converter = new Geom2dConvert_BSplineCurveToBezierCurve(bspline, bspline.FirstParameter(), bspline.LastParameter(), 0.001 /*Precision.PConfusion() * 10*/);
             bool result = true;
 
             if (reverse)
@@ -361,7 +364,6 @@ public static class BrepRenderHelper
                     Messages.Warning("BrepRenderHelper: Bezier curve has an undecreasable order of " + bezier.Degree() + ".");
                     return false;
                 }
-
                 return RenderBSplineCurve(renderer, converter.Curve(), first, last, reverse);
             }
 
@@ -378,13 +380,13 @@ public static class BrepRenderHelper
 
                 case 2:
                     c1 = bezier.Pole(2);
-                    renderer.BezierCurve(new[] {start, c1, end});
+                    renderer.BezierCurve([start, c1, end]);
                     return true;
 
                 case 3:
                     c1 = bezier.Pole(reverse ? 3 : 2);
                     c2 = bezier.Pole(reverse ? 2 : 3);
-                    renderer.BezierCurve(new[] {start, c1, c2, end});
+                    renderer.BezierCurve([start, c1, c2, end]);
                     return true;
 
                 default:

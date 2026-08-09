@@ -359,11 +359,11 @@ public class ViewportTests
     //--------------------------------------------------------------------------------------------------
 
     [Test]
-    [TestCase(ViewUtils.ViewForwardDirection.XPos, 0.0, false)]
-    [TestCase(ViewUtils.ViewForwardDirection.XNeg, 2, false)]
-    [TestCase(ViewUtils.ViewForwardDirection.YPos, -1, true)]
-    [TestCase(ViewUtils.ViewForwardDirection.YNeg, 1, true)]
-    public void PredefinedViews(ViewUtils.ViewForwardDirection forwardDirection, double rotSteps, bool reverseTopBottom)
+    [TestCase(ViewUtils.ViewForwardDirection.XPos, 0.0)]
+    [TestCase(ViewUtils.ViewForwardDirection.XNeg, 2)]
+    [TestCase(ViewUtils.ViewForwardDirection.YPos, -1)]
+    [TestCase(ViewUtils.ViewForwardDirection.YNeg, 1)]
+    public void PredefinedViews(ViewUtils.ViewForwardDirection forwardDirection, double rotSteps)
     {
         double rotation = rotSteps * Maths.HalfPI;
 
@@ -398,10 +398,10 @@ public class ViewportTests
             __Check(Dir.DY.Reversed(), Dir.DX.Reversed(), Dir.DZ);
 
             vc.SetPredefinedView(ViewUtils.PredefinedView.Top);
-            __Check(Dir.DZ.Reversed(), reverseTopBottom ? Dir.DX : Dir.DX.Reversed(), reverseTopBottom ? Dir.DY : Dir.DY.Reversed());
+            __Check(Dir.DZ.Reversed(), Dir.DX.Reversed(), Dir.DY.Reversed());
             
             vc.SetPredefinedView(ViewUtils.PredefinedView.Bottom);
-            __Check(Dir.DZ, reverseTopBottom ? Dir.DX : Dir.DX.Reversed(), reverseTopBottom ? Dir.DY.Reversed() : Dir.DY);
+            __Check(Dir.DZ, Dir.DX.Reversed(), Dir.DY);
         });
     }
     

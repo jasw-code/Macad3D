@@ -66,6 +66,8 @@
     <mmp:AppResource x:Key="Macad.Brushes.Text" ResourceKey="Macad.Brushes.Black" />
     <mmp:AppResource x:Key="Macad.Brushes.TextLight" ResourceKey="Macad.Brushes.Base80" />
 
+    <mmp:AppResource x:Key="Macad.Brushes.Drawing.Background" ResourceKey="Macad.Brushes.White" />
+
     <!--#endregion-->
     
     <!--#region Window -->

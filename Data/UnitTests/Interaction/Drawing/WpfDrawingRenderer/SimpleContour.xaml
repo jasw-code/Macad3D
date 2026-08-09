@@ -1,0 +1,47 @@
+<DrawingGroup ClipGeometry="{x:Null}" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <DrawingGroup.Children>
+    <DrawingGroup>
+      <DrawingGroup.Children>
+        <GeometryDrawing Brush="{x:Null}">
+          <GeometryDrawing.Pen>
+            <Pen Brush="#FF000000" Thickness="0.10000000149011612" StartLineCap="Round" EndLineCap="Round" LineJoin="Miter" MiterLimit="1" />
+          </GeometryDrawing.Pen>
+          <GeometryDrawing.Geometry>
+            <EllipseGeometry RadiusX="3" RadiusY="3" Center="-12,-12" />
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Brush="{x:Null}">
+          <GeometryDrawing.Pen>
+            <Pen Brush="#FF000000" Thickness="0.10000000149011612" StartLineCap="Round" EndLineCap="Round" LineJoin="Miter" MiterLimit="1" />
+          </GeometryDrawing.Pen>
+          <GeometryDrawing.Geometry>
+            <EllipseGeometry RadiusX="7.211102550927978" RadiusY="7.211102550927978" Center="0,0" />
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Brush="{x:Null}">
+          <GeometryDrawing.Pen>
+            <Pen Brush="#FF000000" Thickness="0.10000000149011612" StartLineCap="Round" EndLineCap="Round" LineJoin="Miter" MiterLimit="1" />
+          </GeometryDrawing.Pen>
+          <GeometryDrawing.Geometry>
+            <EllipseGeometry RadiusX="2.82842712474619" RadiusY="2.82842712474619" Center="12,-12" />
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Brush="{x:Null}">
+          <GeometryDrawing.Pen>
+            <Pen Brush="#FF000000" Thickness="0.10000000149011612" StartLineCap="Round" EndLineCap="Round" LineJoin="Miter" MiterLimit="1" />
+          </GeometryDrawing.Pen>
+          <GeometryDrawing.Geometry>
+            <PathGeometry FillRule="EvenOdd" Figures="M20,-20L-20,-20L-20,20L20,20L20,-20z M-15,15L-15,10L-10,10L-10,15L-15,15z M10,15L10,10L15,10C15.105081569497058,10.345268014061748,15.163205781626646,10.704785044936477,15.17227341232497,11.065566196452675C15.181341043023293,11.426347347968875,15.141367324744431,11.788331690310148,15.053835526891273,12.138458881722805C14.966303729038113,12.488586073135464,14.831229084064729,12.826795183803107,14.65344886802918,13.14086437363584C14.47566865199363,13.454933563468572,14.25519809734999,13.74480190264999,14,13.999999999999995C13.744801902650003,14.25519809735,13.454933563468582,14.475668651993622,13.140864373635852,14.653448868029175C12.826795183803121,14.831229084064727,12.488586073135478,14.96630372903811,12.13845888172282,15.05383552689127C11.78833169031016,15.141367324744431,11.42634734796888,15.181341043023284,11.065566196452686,15.172273412324968C10.704785044936493,15.163205781626651,10.345268014061757,15.105081569497052,10,14.999999999999998z" />
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+      </DrawingGroup.Children>
+    </DrawingGroup>
+  </DrawingGroup.Children>
+  <DrawingGroup.Transform>
+    <TransformGroup>
+      <TransformGroup.Children>
+        <TranslateTransform X="30.00000015" Y="30.00000015" />
+      </TransformGroup.Children>
+    </TransformGroup>
+  </DrawingGroup.Transform>
+</DrawingGroup>

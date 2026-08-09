@@ -82,7 +82,7 @@
                               Height="20"
                               X1="6" Y1="10" X2="136" Y2="10"
                               Stroke="{StaticResource Macad.Brushes.Text}" 
-                              StrokeDashArray="{Binding Pattern, Converter={mmp:DoubleCollectionConverter}}"
+                              StrokeDashArray="{Binding Pattern, Converter={mmp:DoubleCollectionConverter}, ConverterParameter=10}"
                               StrokeThickness="2" />
                     </DataTemplate>
                 </ComboBox.ItemTemplate>

@@ -1,0 +1,77 @@
+<dialogs:DrawingExportPanelBase x:Class="Macad.Interaction.Dialogs.ViewportHlrDrawingPanel"
+             xmlns:dialogs="clr-namespace:Macad.Interaction.Dialogs"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mmp="clr-namespace:Macad.Presentation;assembly=Macad.Presentation"
+             mc:Ignorable="d" 
+             Header="Viewport HLR Drawing"
+             Width="260"
+             d:DesignHeight="300" d:DesignWidth="260">
+
+    <StackPanel Margin="5">
+        <TextBlock Margin="10, 0, 0, 0" Text="Included Edge Types" FontWeight="SemiBold" />
+        <Grid Margin="10, 10, 10, 10" HorizontalAlignment="Center">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition Width="1" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="1" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="1" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <Grid.RowDefinitions>
+                <RowDefinition />
+                <RowDefinition Height="1" />
+                <RowDefinition />
+                <RowDefinition Height="1" />
+                <RowDefinition />
+            </Grid.RowDefinitions>
+
+            <Rectangle Grid.RowSpan="5" Grid.Column="1" Stroke="DarkGray" />
+            <Rectangle Grid.RowSpan="5" Grid.Column="3" Stroke="DarkGray" />
+            <Rectangle Grid.RowSpan="5" Grid.Column="5" Stroke="DarkGray" />
+
+            <TextBlock Grid.Row="0" Grid.Column="2" Margin="5,5" Text="Outline" HorizontalAlignment="Center" />
+            <TextBlock Grid.Row="0" Grid.Column="4" Margin="5,5" Text="Smooth" HorizontalAlignment="Center" />
+            <TextBlock Grid.Row="0" Grid.Column="6" Margin="5,5" Text="Sewn" HorizontalAlignment="Center" />
+
+            <Rectangle Grid.Row="1" Grid.ColumnSpan="7" Stroke="DarkGray" />
+
+            <TextBlock Grid.Row="2" Margin="5,5" Text="Visible Edges" HorizontalAlignment="Right" />
+            <CheckBox Grid.Row="2" Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Center"
+                      IsChecked="{Binding Settings.VisibleOutline}" />
+            <CheckBox Grid.Row="2" Grid.Column="4" HorizontalAlignment="Center" VerticalAlignment="Center"
+                      IsChecked="{Binding Settings.VisibleSmooth}" />
+            <CheckBox Grid.Row="2" Grid.Column="6" HorizontalAlignment="Center" VerticalAlignment="Center"
+                      IsChecked="{Binding Settings.VisibleSewn}" />
+
+            <Rectangle Grid.Row="3" Grid.ColumnSpan="7"  Stroke="DarkGray" />
+
+            <TextBlock Grid.Row="4" Margin="5,5" Text="Hidden Edges" HorizontalAlignment="Right" />
+            <CheckBox Grid.Row="4" Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Center"
+                      IsChecked="{Binding Settings.HiddenOutline}" />
+            <CheckBox Grid.Row="4" Grid.Column="4" HorizontalAlignment="Center" VerticalAlignment="Center"
+                      IsChecked="{Binding Settings.HiddenSmooth}" />
+            <CheckBox Grid.Row="4" Grid.Column="6" HorizontalAlignment="Center" VerticalAlignment="Center"
+                      IsChecked="{Binding Settings.HiddenSewn}" />
+        </Grid>
+
+        <TextBlock Margin="10,20,0,0" 
+                   Text="Drawing Source" FontWeight="SemiBold" />
+
+        <CheckBox Margin="10,10,0,0"
+                  Content="Use triangulation (polylines only)"
+                  IsChecked="{Binding Settings.UseTriangulation}" />
+
+        <CheckBox Margin="10,10,0,0"
+                  Content="Include only selected elements"
+                  IsChecked="{Binding IncludeSelectedElementsOnly}"
+                  Visibility="{Binding SelectedElementsOptionAvailable, Converter={mmp:BoolToVisibleCollapsedConverter}}"
+                  AutomationProperties.AutomationId="IncludeSelectedElementsOnly"/>
+
+    </StackPanel>
+</dialogs:DrawingExportPanelBase>

@@ -54,9 +54,6 @@ public static class ExchangeCommands
         {
             if (ExportDialog.Execute<IBodyExporter>(out var filename, out var exporter))
             {
-                if (!ExchangerSettings.Execute<IBodyExporter>(exporter))
-                    return;
-
                 bool success;
                 using (new ProcessingScope(null, "Exporting geometry..."))
                 {
@@ -84,9 +81,6 @@ public static class ExchangeCommands
         {
             if (ExportDialog.Execute<IBodyExporter>(out var filename, out var exporter))
             {
-                if (!ExchangerSettings.Execute<IBodyExporter>(exporter))
-                    return;
-
                 bool success;
                 using (new ProcessingScope(null, "Exporting geometry..."))
                 {

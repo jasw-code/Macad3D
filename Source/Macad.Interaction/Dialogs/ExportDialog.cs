@@ -53,7 +53,7 @@ public static class ExportDialog
 
         _LastFilterIndex = dlg.FilterIndex;
 
-        return true;
+        return ExchangerSettings.Execute<T>(exporter);
     }
 
     //--------------------------------------------------------------------------------------------------

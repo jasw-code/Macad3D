@@ -1,0 +1,40 @@
+<DrawingGroup ClipGeometry="{x:Null}" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <DrawingGroup.Children>
+    <DrawingGroup>
+      <DrawingGroup.Children>
+        <GeometryDrawing Brush="{x:Null}">
+          <GeometryDrawing.Pen>
+            <Pen Brush="#FF000000" Thickness="0.20000000298023224" StartLineCap="Round" EndLineCap="Round" LineJoin="Miter" MiterLimit="1" />
+          </GeometryDrawing.Pen>
+          <GeometryDrawing.Geometry>
+            <EllipseGeometry RadiusX="5.220153254455275" RadiusY="2.088095393413773" Center="0,0">
+              <EllipseGeometry.Transform>
+                <TransformGroup>
+                  <TransformGroup.Children>
+                    <TranslateTransform X="30" Y="-40" />
+                    <RotateTransform Angle="-73.30075576600639" CenterX="30" CenterY="-40" />
+                  </TransformGroup.Children>
+                </TransformGroup>
+              </EllipseGeometry.Transform>
+            </EllipseGeometry>
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Brush="{x:Null}">
+          <GeometryDrawing.Pen>
+            <Pen Brush="#FF000000" Thickness="0.20000000298023224" StartLineCap="Round" EndLineCap="Round" LineJoin="Miter" MiterLimit="1" />
+          </GeometryDrawing.Pen>
+          <GeometryDrawing.Geometry>
+            <PathGeometry FillRule="EvenOdd" Figures="M20,-30L20,-50L40,-50 M40,-50L40,-30L20,-30" />
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+      </DrawingGroup.Children>
+    </DrawingGroup>
+  </DrawingGroup.Children>
+  <DrawingGroup.Transform>
+    <TransformGroup>
+      <TransformGroup.Children>
+        <TranslateTransform X="-9.999999899999999" Y="60.0000001" />
+      </TransformGroup.Children>
+    </TransformGroup>
+  </DrawingGroup.Transform>
+</DrawingGroup>

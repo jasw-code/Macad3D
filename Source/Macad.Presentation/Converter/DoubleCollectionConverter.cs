@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Windows.Data;
@@ -15,10 +16,25 @@ public class DoubleCollectionConverter : ConverterMarkupExtension<DoubleCollecti
     {
         if (value is double[] array)
         {
-            return new DoubleCollection(array);
+            IEnumerable<double> enumerable = array;
+            switch (parameter)
+            {
+                case double dscale:
+                    enumerable = enumerable.Select(d => d * dscale);
+                    break;
+                case string str:
+                    if(double.TryParse(str, NumberStyles.Float, CultureInfo.InvariantCulture, out double sscale))
+                    {
+                        enumerable = enumerable.Select(d => d * sscale);
+                    }
+                    break;
+            }
+            return new DoubleCollection(enumerable);
         }
         return new DoubleCollection();
     }
+
+    //--------------------------------------------------------------------------------------------------
 
     public override object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
     {
@@ -28,4 +44,7 @@ public class DoubleCollectionConverter : ConverterMarkupExtension<DoubleCollecti
         }
         return new double[0];
     }
+
+    //--------------------------------------------------------------------------------------------------
+
 }

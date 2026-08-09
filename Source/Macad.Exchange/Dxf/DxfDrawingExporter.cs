@@ -328,7 +328,7 @@ internal sealed class DxfDrawingExporter: IDrawingRenderer, IRendererCapabilitie
     {
         _InitDimensionBlock();
 
-        dim.ComputeParameters(out var p);
+        var p = dim.ComputeParameters();
 
         var textMidPos = p.TextOrigin.Translated(Dir2d.DX.Rotated(-p.TextRotation).ToVec(p.TextWidth * 0.5))
                           .Translated(Dir2d.DX.Rotated(-p.TextRotation + Maths.HalfPI).ToVec(p.TextHeight * 0.5));

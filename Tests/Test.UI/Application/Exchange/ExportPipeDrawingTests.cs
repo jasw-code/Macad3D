@@ -41,19 +41,21 @@ public class ExportPipeDrawingTests : UITestBase
         MainWindow.Ribbon.SelectTab(RibbonTabs.Toolbox);
         Assert.IsTrue(MainWindow.Ribbon.IsEnabled("ExportPipeDrawing"));
         MainWindow.Ribbon.ClickButton("ExportPipeDrawing");
+        
+        var exportDlg = new WindowAdaptor(MainWindow, "ExportDrawingDialog");
+        exportDlg.Click("Ok");
 
         var fileDlg = new FileDialogAdaptor(MainWindow);
         fileDlg.SelectFileType("*.svg");
         fileDlg.Save(path, checkFile:false);
         Assert.IsFalse(FileDialogAdaptor.IsDialogOpen(MainWindow));
-        Assert.IsFalse(WindowAdaptor.IsWindowOpen(MainWindow, "ExportViewportHlr"));
 
         var dlg = new WindowAdaptor(MainWindow, "ExchangerSettings");
         dlg.Click("Ok");
         Assert.IsFalse(WindowAdaptor.IsWindowOpen(MainWindow, "ExchangerSettings"));
+        Assert.IsFalse(WindowAdaptor.IsWindowOpen(MainWindow, "ExportDrawingDialog"));
 
-        Assert.IsTrue(System.IO.File.Exists(path));
-
+        Assert.IsTrue(File.Exists(path));
     }
 
     //--------------------------------------------------------------------------------------------------
@@ -74,18 +76,22 @@ public class ExportPipeDrawingTests : UITestBase
         Assert.IsTrue(MainWindow.Ribbon.IsEnabled("ExportPipeDrawing"));
         MainWindow.Ribbon.ClickButton("ExportPipeDrawing");
 
+        var exportDlg = new WindowAdaptor(MainWindow, "ExportDrawingDialog");
+        exportDlg.Click("Ok");
+
         var fileDlg = new FileDialogAdaptor(MainWindow);
         fileDlg.SelectFileType("*.svg");
         fileDlg.Save(path, checkFile:false);
         Assert.IsFalse(FileDialogAdaptor.IsDialogOpen(MainWindow));
-        Assert.IsFalse(WindowAdaptor.IsWindowOpen(MainWindow, "ExportViewportHlr"));
 
         var dlg = new WindowAdaptor(MainWindow, "ExchangerSettings");
         dlg.Click("Cancel");
         Assert.IsFalse(WindowAdaptor.IsWindowOpen(MainWindow, "ExchangerSettings"));
+        Assert.IsTrue(WindowAdaptor.IsWindowOpen(MainWindow, "ExportDrawingDialog"));
+        exportDlg.Click("Cancel");
+        Assert.IsFalse(WindowAdaptor.IsWindowOpen(MainWindow, "ExportDrawingDialog"));
 
-        Assert.IsFalse(System.IO.File.Exists(path));
-
+        Assert.IsFalse(File.Exists(path));
     }
 
     //--------------------------------------------------------------------------------------------------
@@ -104,8 +110,14 @@ public class ExportPipeDrawingTests : UITestBase
         Assert.IsTrue(MainWindow.Ribbon.IsEnabled("ExportPipeDrawing"));
         MainWindow.Ribbon.ClickButton("ExportPipeDrawing");
 
+        var exportDlg = new WindowAdaptor(MainWindow, "ExportDrawingDialog");
+        exportDlg.Click("Ok");
+
         var fileDlg = new FileDialogAdaptor(MainWindow);
         fileDlg.ClickButton(FileDialogAdaptor.Button.Cancel);
+        Assert.IsTrue(WindowAdaptor.IsWindowOpen(MainWindow, "ExportDrawingDialog"));
+        exportDlg.Click("Cancel");
+        Assert.IsFalse(WindowAdaptor.IsWindowOpen(MainWindow, "ExportDrawingDialog"));
         Assert.IsFalse(FileDialogAdaptor.IsDialogOpen(MainWindow));
     }
 

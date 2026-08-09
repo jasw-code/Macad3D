@@ -127,6 +127,7 @@ public class AngleDimension : DrawingElement
     string _Text;
     bool _AutoText = true;
     bool _IsNotToScale;
+    Parameters _Parameters;
 
     const double _ExtensionOverlength = 2.0;
 
@@ -141,6 +142,7 @@ public class AngleDimension : DrawingElement
     void _Invalidate()
     {
         Extents = null;
+        _Parameters = null;
     }
 
     //--------------------------------------------------------------------------------------------------
@@ -151,7 +153,8 @@ public class AngleDimension : DrawingElement
         bb.Add(FirstPoint);
         bb.Add(SecondPoint);
 
-        if (!ComputeParameters(out var parameters))
+        var parameters = ComputeParameters();
+        if (parameters == null)
             return;
 
         bb.Add(_FirstPoint.Translated(parameters.FirstExtensionVector));
@@ -164,7 +167,8 @@ public class AngleDimension : DrawingElement
 
     public override bool Render(IDrawingRenderer renderer)
     {
-        if (!ComputeParameters(out var p))
+        var p = ComputeParameters();
+        if (p == null)
             return false;
 
         if (renderer.RenderElement(this))
@@ -216,7 +220,7 @@ public class AngleDimension : DrawingElement
 
     #region Helper
 
-    public struct Parameters
+    public record Parameters
     {
         public Vec2d FirstExtensionVector;
         public Pnt2d FirstArrowPoint;
@@ -237,12 +241,17 @@ public class AngleDimension : DrawingElement
 
     //--------------------------------------------------------------------------------------------------
 
-    public bool ComputeParameters(out Parameters parameters)
+    public Parameters ComputeParameters()
     {
+        if(_Parameters != null)
+        {
+            return _Parameters;
+        }
+
         if (FirstPoint.IsEqual(SecondPoint, 0.01))
         {
-            parameters = new();
-            return false;
+            _Parameters = new();
+            return null;
         }
 
         var arrowSize = DrawingRenderHelper.GetArrowSize();
@@ -268,7 +277,13 @@ public class AngleDimension : DrawingElement
             if (angle2 < angle1)
                 angle1 -= Maths.DoublePI;
         }
+
         var angle = Maths.NormalizeAngleRad(angle2 - angle1);
+        if (angle > Math.PI)
+        {
+            angle1.Swap(ref angle2);
+            angle1 -= Maths.DoublePI;
+        }
 
         if (_AutoText)
         {
@@ -328,9 +343,9 @@ public class AngleDimension : DrawingElement
         // Move arrows slightly towards center, to compensate that the tangent is taken from the middle of the arrow
         double arrowOffset = _CenterPoint.Distance(circle.Value(angle1)) - _CenterPoint.Distance(arrowP1);
         arrowP1.Translate(extDir1.ToVec(arrowOffset)); 
-        arrowP2.Translate(extDir2.ToVec(arrowOffset)); 
+        arrowP2.Translate(extDir2.ToVec(arrowOffset));
 
-        parameters = new ()
+        _Parameters = new ()
         {
             FirstExtensionVector = extVector1,
             FirstArrowPoint = arrowP1,
@@ -349,7 +364,7 @@ public class AngleDimension : DrawingElement
             TextScale = textScale
         };
 
-        return true;
+        return _Parameters;
     }
 
     //--------------------------------------------------------------------------------------------------

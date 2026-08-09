@@ -24,7 +24,7 @@ public class ExportViewHlrTests : UITestBase
         // Do Export
         MainWindow.Ribbon.SelectTab(RibbonTabs.Toolbox);
         MainWindow.Ribbon.ClickButton("ExportViewHlr");
-        var dlg = new WindowAdaptor(MainWindow, "ExportViewportHlr");
+        var dlg = new WindowAdaptor(MainWindow, "ExportDrawingDialog");
 
         _SaveSvgFromExportDialog(dlg, path);
     }
@@ -39,18 +39,20 @@ public class ExportViewHlrTests : UITestBase
         // Cancel export settings
         MainWindow.Ribbon.SelectTab(RibbonTabs.Toolbox);
         MainWindow.Ribbon.ClickButton("ExportViewHlr");
-        var dlg = new WindowAdaptor(MainWindow, "ExportViewportHlr");
+        var dlg = new WindowAdaptor(MainWindow, "ExportDrawingDialog");
         dlg.Click("Ok");
 
         var fileDlg = new FileDialogAdaptor(MainWindow);
         fileDlg.SelectFileType("*.svg");
         fileDlg.Save(path, checkFile:false);
         Assert.IsFalse(FileDialogAdaptor.IsDialogOpen(MainWindow));
-        Assert.IsFalse(WindowAdaptor.IsWindowOpen(MainWindow, "ExportViewportHlr"));
 
-        dlg = new WindowAdaptor(MainWindow, "ExchangerSettings");
-        dlg.Click("Cancel");
+        var settingsDlg = new WindowAdaptor(MainWindow, "ExchangerSettings");
+        settingsDlg.Click("Cancel");
         Assert.IsFalse(WindowAdaptor.IsWindowOpen(MainWindow, "ExchangerSettings"));
+        Assert.IsTrue(WindowAdaptor.IsWindowOpen(MainWindow, "ExportDrawingDialog"));
+        dlg.Click("Cancel");
+        Assert.IsFalse(WindowAdaptor.IsWindowOpen(MainWindow, "ExportDrawingDialog"));
 
         Assert.IsFalse(File.Exists(path));
     }
@@ -63,15 +65,18 @@ public class ExportViewHlrTests : UITestBase
         // Cancel FileDlg
         MainWindow.Ribbon.SelectTab(RibbonTabs.Toolbox);
         MainWindow.Ribbon.ClickButton("ExportViewHlr");
-        var dlg = new WindowAdaptor(MainWindow, "ExportViewportHlr");
+        var dlg = new WindowAdaptor(MainWindow, "ExportDrawingDialog");
         dlg.Click("Ok");
 
         var fileDlg = new FileDialogAdaptor(MainWindow);
         fileDlg.ClickButton(FileDialogAdaptor.Button.Cancel);
+
         Assert.IsFalse(FileDialogAdaptor.IsDialogOpen(MainWindow));
-        Assert.IsFalse(WindowAdaptor.IsWindowOpen(MainWindow, "ExportViewportHlr"));
+        Assert.IsTrue(WindowAdaptor.IsWindowOpen(MainWindow, "ExportDrawingDialog"));
+        dlg.Click("Cancel");
+        Assert.IsFalse(WindowAdaptor.IsWindowOpen(MainWindow, "ExportDrawingDialog"));
     }
-        
+
     //--------------------------------------------------------------------------------------------------
 
     [Test]
@@ -80,9 +85,9 @@ public class ExportViewHlrTests : UITestBase
         // Cancel dialog
         MainWindow.Ribbon.SelectTab(RibbonTabs.Toolbox);
         MainWindow.Ribbon.ClickButton("ExportViewHlr");
-        var dlg = new WindowAdaptor(MainWindow, "ExportViewportHlr");
+        var dlg = new WindowAdaptor(MainWindow, "ExportDrawingDialog");
         dlg.Click("Cancel");
-        Assert.IsFalse(WindowAdaptor.IsWindowOpen(MainWindow, "ExportViewportHlr"));
+        Assert.IsFalse(WindowAdaptor.IsWindowOpen(MainWindow, "ExportDrawingDialog"));
     }
 
     //--------------------------------------------------------------------------------------------------
@@ -95,18 +100,18 @@ public class ExportViewHlrTests : UITestBase
         // Do Export
         MainWindow.Ribbon.SelectTab(RibbonTabs.Toolbox);
         MainWindow.Ribbon.ClickButton("ExportViewHlr");
-        var dlg = new WindowAdaptor(MainWindow, "ExportViewportHlr");
+        var dlg = new WindowAdaptor(MainWindow, "ExportDrawingDialog");
         dlg.Click("Ok");
 
         var fileDlg = new FileDialogAdaptor(MainWindow);
         fileDlg.SelectFileType("*.dxf");
         fileDlg.Save(path, checkFile:false);
         Assert.IsFalse(FileDialogAdaptor.IsDialogOpen(MainWindow));
-        Assert.IsFalse(WindowAdaptor.IsWindowOpen(MainWindow, "ExportViewportHlr"));
 
         dlg = new WindowAdaptor(MainWindow, "ExchangerSettings");
         dlg.Click("Ok");
         Assert.IsFalse(WindowAdaptor.IsWindowOpen(MainWindow, "ExchangerSettings"));
+        Assert.IsFalse(WindowAdaptor.IsWindowOpen(MainWindow, "ExportDrawingDialog"));
 
         FileDialogAdaptor.CheckFileExists(path);
     }
@@ -124,7 +129,7 @@ public class ExportViewHlrTests : UITestBase
         // Box selected
         MainWindow.Ribbon.SelectTab(RibbonTabs.Toolbox);
         MainWindow.Ribbon.ClickButton("ExportViewHlr");
-        var dlg = new WindowAdaptor(MainWindow, "ExportViewportHlr");
+        var dlg = new WindowAdaptor(MainWindow, "ExportDrawingDialog");
         Assert.IsTrue(dlg.Exists("IncludeSelectedElementsOnly"));
         Assert.IsTrue(dlg.IsChecked("IncludeSelectedElementsOnly"));
         _SaveSvgFromExportDialog(dlg, path1);
@@ -132,7 +137,7 @@ public class ExportViewHlrTests : UITestBase
         // Box selected, option disabled
         MainWindow.Ribbon.SelectTab(RibbonTabs.Toolbox);
         MainWindow.Ribbon.ClickButton("ExportViewHlr");
-        dlg = new WindowAdaptor(MainWindow, "ExportViewportHlr");
+        dlg = new WindowAdaptor(MainWindow, "ExportDrawingDialog");
         Assert.IsTrue(dlg.Exists("IncludeSelectedElementsOnly"));
         dlg.Click("IncludeSelectedElementsOnly");
         Assert.IsFalse(dlg.IsChecked("IncludeSelectedElementsOnly"));
@@ -142,7 +147,7 @@ public class ExportViewHlrTests : UITestBase
         // Box unselected
         MainWindow.Viewport.ClickRelative(0.1, 0.1);
         MainWindow.Ribbon.ClickButton("ExportViewHlr");
-        dlg = new WindowAdaptor(MainWindow, "ExportViewportHlr");
+        dlg = new WindowAdaptor(MainWindow, "ExportDrawingDialog");
         Assert.IsFalse(dlg.Exists("IncludeSelectedElementsOnly"));
         _SaveSvgFromExportDialog(dlg, path3);
         Assert.AreEqual(new FileInfo(path2).Length, new FileInfo(path3).Length);

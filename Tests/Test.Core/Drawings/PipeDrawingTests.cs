@@ -92,12 +92,12 @@ public class PipeDrawingTests
         var svg = _Export(drawing);
         AssertHelper.IsSameTextFile(Path.Combine(_BasePath, $"SkipWarpedLinearSegment{(startLine?1:0)}{(endLine?1:0)}.svg"), svg, AssertHelper.TextCompareFlags.IgnoreFloatPrecision);
     }
-    
+
     //--------------------------------------------------------------------------------------------------
     //--------------------------------------------------------------------------------------------------
 
     #region Helper
-        
+
     public MemoryStream _Export(PipeDrawing pipeDrawing)
     {
         Drawing drawing = new()

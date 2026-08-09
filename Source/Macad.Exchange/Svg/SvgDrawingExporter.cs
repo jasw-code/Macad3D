@@ -240,7 +240,7 @@ internal sealed class SvgDrawingExporter : SvgExporterBase, IDrawingRenderer, IR
         {
             // Full ellipse
             var segment = new SvgDomEllipse(center, majorRadius, minorRadius) {Style = CurrentStyle};
-            segment.Transforms.Add(new SvgRotateTransform(Maths.NormalizeAngleDegree(-rotation.ToDeg())));
+            segment.Transforms.Add(new SvgRotateTransform(Maths.NormalizeAngleDegree(-rotation.ToDeg()), center));
             CurrentDomGroup.Children.Add(segment);
         }
         else

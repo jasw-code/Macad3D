@@ -273,7 +273,7 @@ public static class AssertHelper
     {
         int __FindFrontBorderOfFloat(string line, int startindex)
         {
-            int index = startindex - 1;
+            int index = startindex;
             while (index > 0)
             {
                 if (!_FloatChars.Contains(line[index]))
@@ -304,11 +304,25 @@ public static class AssertHelper
 
         bool __TryGetFloatValue(string line, int col, out double result, out int endPos)
         {
-            int startPos = __FindFrontBorderOfFloat(line, col);
+            if (!_FloatChars.Contains(line[col]) && col > 0)
+            {
+                // When we have a difference because of precision, it is at the end of the float string.
+                // Check one character backwards if the number is one digit shorter than the reference.
+                col--;
+            }
 
-            endPos = __FindBackBorderOfFloat(line, col);
-
-            return double.TryParse(line.Substring(startPos, endPos - startPos + 1), NumberStyles.Any, CultureInfo.InvariantCulture, out result);
+            if (_FloatChars.Contains(line[col]))
+            {
+                int startPos = __FindFrontBorderOfFloat(line, col-1);
+                endPos = __FindBackBorderOfFloat(line, col+1);
+                if (startPos <= endPos)
+                {
+                    return double.TryParse(line.Substring(startPos, endPos - startPos + 1), NumberStyles.Any, CultureInfo.InvariantCulture, out result);
+                }
+            }
+            result = 0;
+            endPos = col;
+            return false;
         }
 
         //--------------------------------------------------------------------------------------------------
@@ -341,8 +355,8 @@ public static class AssertHelper
                     {
                         if (testValue.IsEqual(refValue, testValue.Abs() * 0.0001))
                         {
-                            testCol = newTestEnd;
-                            refCol = newRefEnd;
+                            testCol = newTestEnd + 1;
+                            refCol = newRefEnd + 1;
                             continue;
                         }
                     }

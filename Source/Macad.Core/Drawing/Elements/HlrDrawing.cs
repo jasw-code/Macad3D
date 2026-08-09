@@ -1,30 +1,26 @@
-﻿using System.Linq;
-using Macad.Common;
+﻿using Macad.Common;
 using Macad.Common.Serialization;
 using Macad.Occt;
 using Macad.Occt.Helper;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Macad.Core.Drawing;
 
 public class HlrDrawing : DrawingElement
 {
-    enum LayerType
-    {
-        Outline = 0,
-        Inline = 1,
-        HiddenOutline = 2,
-        HiddenInline = 3
-    }
-
-    //--------------------------------------------------------------------------------------------------
-
-    static readonly StrokeStyle[] _StrokeStyles = 
-    {
-        new (Color.Black, 0.2f, LineStyle.Solid),
-        new (Color.Black, 0.1f, LineStyle.Solid),
-        new (Color.Black, 0.1f, LineStyle.Dash),
-        new (Color.Black, 0.05f, LineStyle.ShortDash),
-    };
+    static readonly Dictionary<HlrEdgeTypes, StrokeStyle> _StrokeStyles = new()
+        {
+            { HlrEdgeTypes.VisibleOutline, new(Color.Black, 0.2f, LineStyle.Solid) },
+            { HlrEdgeTypes.VisibleSharp, new(Color.Black, 0.2f, LineStyle.Solid) },
+            { HlrEdgeTypes.VisibleSmooth, new(Color.Black, 0.1f, LineStyle.Solid) },
+            { HlrEdgeTypes.VisibleSewn, new(Color.Black, 0.1f, LineStyle.Solid) },
+            { HlrEdgeTypes.HiddenOutline, new(Color.Black, 0.1f, LineStyle.Dash) },
+            { HlrEdgeTypes.HiddenSharp, new(Color.Black, 0.1f, LineStyle.Dash) },
+            { HlrEdgeTypes.HiddenSmooth, new(Color.Black, 0.05f, LineStyle.ShortDash) },
+            { HlrEdgeTypes.HiddenSewn, new(Color.Black, 0.05f, LineStyle.ShortDash)}
+        };
 
     //--------------------------------------------------------------------------------------------------
 
@@ -74,7 +70,7 @@ public class HlrDrawing : DrawingElement
             {
                 SaveUndo();
                 _IncludedEdgeTypes = value;
-                _Invalidate();
+                _UpdateExtents();
                 RaisePropertyChanged();
             }
         }
@@ -104,7 +100,7 @@ public class HlrDrawing : DrawingElement
     HlrEdgeTypes _IncludedEdgeTypes;
     Ax3 _Projection;
     IBrepSource[] _Sources;
-    TopoDS_Shape[] _Shapes;
+    readonly Dictionary<HlrEdgeTypes, TopoDS_Shape> _Shapes = new();
 
     //--------------------------------------------------------------------------------------------------
 
@@ -122,7 +118,7 @@ public class HlrDrawing : DrawingElement
 
     void _Invalidate()
     {
-        _Shapes = null;
+        _Shapes.Clear();
         Extents = null;
     }
 
@@ -137,10 +133,8 @@ public class HlrDrawing : DrawingElement
 
     bool _EnsureShapes()
     {
-        if (_Shapes != null)
+        if (_Shapes.Count > 0)
             return true; // everything is ready
-        _Shapes = new TopoDS_Shape[4];
-        Bnd_Box2d aabb = new Bnd_Box2d();
 
         if (_Sources == null)
             return true; // nothing to do
@@ -148,11 +142,7 @@ public class HlrDrawing : DrawingElement
         var breps = _Sources.SelectMany(s => s.GetBreps());
 
         // Create algo instance
-        HlrBRepAlgoBase hlrAlgo;
-        if (_UseTriangulation)
-            hlrAlgo = new HlrBRepAlgoPoly(breps);
-        else
-            hlrAlgo = new HlrBRepAlgo(breps);
+        HlrBRepAlgoBase hlrAlgo = _UseTriangulation ? new HlrBRepAlgoPoly(breps) : new HlrBRepAlgo(breps);
 
         // Set Projection
         hlrAlgo.SetProjection(_Projection);
@@ -161,58 +151,44 @@ public class HlrDrawing : DrawingElement
         hlrAlgo.Update();
 
         // Fetch layer
-        _CreateLayerShape(LayerType.Outline,       HlrEdgeTypes.VisibleOutline, HlrEdgeTypes.VisibleSharp, hlrAlgo, aabb);
-        _CreateLayerShape(LayerType.Inline,        HlrEdgeTypes.VisibleSmooth,  HlrEdgeTypes.VisibleSewn,  hlrAlgo, aabb);
-        _CreateLayerShape(LayerType.HiddenOutline, HlrEdgeTypes.HiddenOutline,  HlrEdgeTypes.HiddenSharp,  hlrAlgo, aabb);
-        _CreateLayerShape(LayerType.HiddenInline,  HlrEdgeTypes.HiddenSmooth,   HlrEdgeTypes.HiddenSewn,   hlrAlgo, aabb);
-            
-        Extents = aabb;
+        foreach (var edgeType in Enum.GetValues<HlrEdgeTypes>())
+        {
+            TopoDS_Shape shape = hlrAlgo.GetResult(edgeType);
+            if (shape != null)
+            {
+                _Shapes[edgeType] = shape;
+            }
+        }
+
+        _UpdateExtents();
 
         return true;
     }
 
     //--------------------------------------------------------------------------------------------------
 
-    void _CreateLayerShape(LayerType layerType, HlrEdgeTypes edgeType1, HlrEdgeTypes edgeType2, HlrBRepAlgoBase hlrAlgo, Bnd_Box2d aabb)
+    void _UpdateExtents()
     {
-        TopoDS_Shape shape = null;
-        var shape1 = _IncludedEdgeTypes.HasFlag(edgeType1) ? hlrAlgo.GetResult(edgeType1) : null;
-        var shape2 = _IncludedEdgeTypes.HasFlag(edgeType2) ? hlrAlgo.GetResult(edgeType2) : null;
-
-        if (shape1 != null && shape2 != null)
+        Bnd_Box2d aabb = new Bnd_Box2d();
+        foreach (var edgeType in Enum.GetValues<HlrEdgeTypes>())
         {
-            var builder = new BRep_Builder();
-            var compound = new TopoDS_Compound();
-            builder.MakeCompound(compound);
-            builder.Add(compound, hlrAlgo.GetResult(edgeType1));
-            builder.Add(compound, hlrAlgo.GetResult(edgeType2));
+            if (!IncludedEdgeTypes.HasFlag(edgeType))
+                continue;
+            if (!_Shapes.TryGetValue(edgeType, out var shape))
+                continue;
 
-            shape = compound;
+            // Update bounding rect
+            double xmin = 0;
+            double xmax = 0;
+            double ymin = 0;
+            double ymax = 0;
+            double zmin = 0;
+            double zmax = 0;
+            shape.BoundingBox()?.Get(ref xmin, ref ymin, ref zmin, ref xmax, ref ymax, ref zmax);
+            aabb.Add(new Pnt2d(xmin, ymin));
+            aabb.Add(new Pnt2d(xmax, ymax));
         }
-        else if (shape1 != null)
-        {
-            shape = shape1;
-        }
-        else if (shape2 != null)
-        {
-            shape = shape2;
-        }
-
-        if (shape == null) 
-            return;
-
-        _Shapes[(int) layerType] = shape;
-
-        // Update bounding rect
-        double xmin = 0;
-        double xmax = 0;
-        double ymin = 0;
-        double ymax = 0;
-        double zmin = 0;
-        double zmax = 0;
-        shape.BoundingBox()?.Get(ref xmin, ref ymin, ref zmin, ref xmax, ref ymax, ref zmax);
-        aabb.Add(new Pnt2d(xmin, ymin));
-        aabb.Add(new Pnt2d(xmax, ymax));
+        Extents = aabb;
     }
 
     //--------------------------------------------------------------------------------------------------
@@ -220,28 +196,45 @@ public class HlrDrawing : DrawingElement
     public override bool Render(IDrawingRenderer renderer)
     {
         if (!_EnsureShapes())
+        {
             return false;
+        }
 
         if (renderer.RenderElement(this))
+        {
             return true;
+        }
 
-        bool res = _RenderLayer(renderer, LayerType.HiddenInline);
-        res &= _RenderLayer(renderer, LayerType.Inline);
-        res &= _RenderLayer(renderer, LayerType.HiddenOutline);
-        res &= _RenderLayer(renderer, LayerType.Outline);
+        // Render from hidden to visible and from inline to outline, so that the more relevant edges
+        // are drawn on top of the less important ones.
+        bool res = true;
+        res &= _RenderLayer(renderer, HlrEdgeTypes.HiddenSmooth);
+        res &= _RenderLayer(renderer, HlrEdgeTypes.HiddenSewn);
+        res &= _RenderLayer(renderer, HlrEdgeTypes.VisibleSmooth);
+        res &= _RenderLayer(renderer, HlrEdgeTypes.VisibleSewn);
+        res &= _RenderLayer(renderer, HlrEdgeTypes.HiddenOutline);
+        res &= _RenderLayer(renderer, HlrEdgeTypes.HiddenSharp);
+        res &= _RenderLayer(renderer, HlrEdgeTypes.VisibleOutline);
+        res &= _RenderLayer(renderer, HlrEdgeTypes.VisibleSharp);
 
         return res;
     }
 
     //--------------------------------------------------------------------------------------------------
 
-    bool _RenderLayer(IDrawingRenderer renderer, LayerType type)
+    bool _RenderLayer(IDrawingRenderer renderer, HlrEdgeTypes type)
     {
-        var shape = _Shapes[(int) type];
-        if (shape == null)
-            return true; // Nothing to render
+        if (!IncludedEdgeTypes.HasFlag(type))
+        {
+            return true;
+        }
 
-        renderer.SetStyle(_StrokeStyles[(int)type], null, null);
+        if (!_Shapes.TryGetValue(type, out var shape))
+        {
+            return true; // Nothing to render
+        }
+
+        renderer.SetStyle(_StrokeStyles[type], null, null);
         renderer.BeginGroup(type.ToString());
 
         bool res = BrepRenderHelper.RenderShape(renderer, shape);
@@ -249,4 +242,18 @@ public class HlrDrawing : DrawingElement
         renderer.EndGroup();
         return res;
     }
+
+    //--------------------------------------------------------------------------------------------------
+
+    internal TopoDS_Shape GetBrepShape(HlrEdgeTypes type)
+    {
+        if (!_EnsureShapes())
+        {
+            return null;
+        }
+        return _Shapes.GetValueOrDefault(type);
+    }
+
+    //--------------------------------------------------------------------------------------------------
+
 }

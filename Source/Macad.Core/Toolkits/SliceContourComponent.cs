@@ -335,17 +335,13 @@ public class SliceContourComponent : Component, IShapeDependent
 
     #region Export
 
-    public bool Export(string fileName, IExchanger exchanger)
+    public Drawing.Drawing CreateDrawing()
     {
         if (!IsValid)
         {
             Messages.Error("The slice contour data could not be generated.");
-            return false;
+            return null;
         }
-
-        var exporter = exchanger as IDrawingExporter;
-        if (exporter == null)
-            return false;
 
         Drawing.Drawing drawing = new()
         {
@@ -361,6 +357,22 @@ public class SliceContourComponent : Component, IShapeDependent
             };
             drawing.Add(drawingLayer);
         }
+
+        return drawing;
+    }
+
+    //--------------------------------------------------------------------------------------------------
+
+    public bool Export(string fileName, IExchanger exchanger)
+    {
+        var drawing = CreateDrawing();
+        if (drawing == null)
+            return false;
+
+        var exporter = exchanger as IDrawingExporter;
+        if (exporter == null)
+            return false;
+
         return exporter.DoExport(fileName, drawing);
     }
 

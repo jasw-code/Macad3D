@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Linq;
+using Macad.Common;
 using Macad.Test.Utils;
 using Macad.Core.Shapes;
 using Macad.Core.Topology;
@@ -161,6 +162,31 @@ public class HlrDrawingTests
         var visibleSharp = hlrAlgo.GetResult(HlrEdgeTypes.VisibleSharp);
         Assert.IsNotNull(visibleSharp);
         Assert.IsTrue(ModelCompare.CompareShape(visibleSharp, Path.Combine(_BasePath, "IgnoreInvisible")));
+    }
+
+    //--------------------------------------------------------------------------------------------------
+
+    [Test]
+    public void RolledView()
+    {
+        // Create simple geometry
+        var imprint = TestGeomGenerator.CreateImprint();
+        Assert.IsTrue(imprint.Make(Shape.MakeFlags.None));
+        var ocShape = imprint.GetTransformedBRep();
+
+        // Rotate the shape around the same axis as the projection, but in the opposite direction
+        // The result must be cumulative, not complementary.
+        Trsf transform = new();
+        transform.SetRotation(new Ax1(Pnt.Origin, new Dir(0, 1, 0)), -Maths.PI / 8);
+        var hlrAlgo = new HlrBRepAlgo([ocShape.Located(new TopLoc_Location(transform))]);
+        Ax3 projection = new(Pnt.Origin, new Dir(0, 1, 0), new Dir(1, 0, 0).Rotated(new Ax1(Pnt.Origin, new Dir(0, 1, 0)), Maths.PI / 8));
+        hlrAlgo.SetProjection(projection);
+        hlrAlgo.Update();
+
+        // Get Hlr Shape
+        var visibleSharp = hlrAlgo.GetResult(HlrEdgeTypes.VisibleSharp);
+        Assert.IsNotNull(visibleSharp);
+        Assert.IsTrue(ModelCompare.CompareShape2D(visibleSharp, Path.Combine(_BasePath, "RolledView01")));
     }
 
     //--------------------------------------------------------------------------------------------------

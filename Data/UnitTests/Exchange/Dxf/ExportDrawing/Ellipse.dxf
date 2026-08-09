@@ -203,7 +203,7 @@ AcDbSymbolTableRecord
 100
 AcDbLayerTableRecord
 2
-HiddenOutline
+HiddenSharp
 70
 0
 6
@@ -221,7 +221,7 @@ AcDbSymbolTableRecord
 100
 AcDbLayerTableRecord
 2
-Outline
+VisibleSharp
 70
 0
 6
@@ -479,7 +479,7 @@ LINE
 100
 AcDbEntity
 8
-HiddenOutline
+HiddenSharp
 100
 AcDbLine
 10
@@ -501,7 +501,7 @@ LINE
 100
 AcDbEntity
 8
-HiddenOutline
+HiddenSharp
 100
 AcDbLine
 10
@@ -523,7 +523,7 @@ ELLIPSE
 100
 AcDbEntity
 8
-HiddenOutline
+HiddenSharp
 100
 AcDbEllipse
 10
@@ -551,7 +551,7 @@ LINE
 100
 AcDbEntity
 8
-HiddenOutline
+HiddenSharp
 100
 AcDbLine
 10
@@ -573,7 +573,7 @@ LINE
 100
 AcDbEntity
 8
-HiddenOutline
+HiddenSharp
 100
 AcDbLine
 10
@@ -595,7 +595,7 @@ LINE
 100
 AcDbEntity
 8
-Outline
+VisibleSharp
 100
 AcDbLine
 10
@@ -617,7 +617,7 @@ LINE
 100
 AcDbEntity
 8
-Outline
+VisibleSharp
 100
 AcDbLine
 10
@@ -639,7 +639,7 @@ ELLIPSE
 100
 AcDbEntity
 8
-Outline
+VisibleSharp
 100
 AcDbEllipse
 10
@@ -667,7 +667,7 @@ LINE
 100
 AcDbEntity
 8
-Outline
+VisibleSharp
 100
 AcDbLine
 10
@@ -689,7 +689,7 @@ LINE
 100
 AcDbEntity
 8
-Outline
+VisibleSharp
 100
 AcDbLine
 10

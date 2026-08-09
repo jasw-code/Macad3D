@@ -326,14 +326,14 @@ public sealed class ViewportController : BaseObject, IDisposable
 
         if (V3dView.IfWindow())
         {
-            if (!Equals(V3dView.ParentView(), parentView))
+            if (!V3dView.IsParentView(parentView))
             {
                 ReleaseWindow();
                 _Init();
             }
         }
 
-        if (!Equals(V3dView.ParentView(), parentView))
+        if (!V3dView.IsParentView(parentView))
         {
             V3dView.SetWindow(parentView, new(rect.Width, rect.Height), Aspect_TypeOfTriedronPosition.LEFT_UPPER, new(rect.Left, rect.Top));
 

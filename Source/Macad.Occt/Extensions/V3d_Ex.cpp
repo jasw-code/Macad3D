@@ -6,3 +6,10 @@ Macad::Occt::Graphic3d_RenderingParams^ Macad::Occt::V3d_View::ChangeRenderingPa
 {
 	return gcnew Macad::Occt::Graphic3d_RenderingParams(NativeInstance->ChangeRenderingParams());
 }
+
+//--------------------------------------------------------------------------------------------------
+
+bool Macad::Occt::V3d_View::IsParentView(Macad::Occt::V3d_View^ theView)
+{
+	return NativeInstance->ParentView() == theView->NativeInstance;
+}
